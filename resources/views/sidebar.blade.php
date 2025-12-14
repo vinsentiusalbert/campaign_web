@@ -45,6 +45,13 @@
                     </a>
                 </li>
                 
+                <li class="nav-item">
+                    <a href="{{ route('campaign-indihome.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-indihome.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-house-signal" style="color:#ff8383;"></i>
+                        <p>Campaign Indihome</p>
+                    </a>
+                </li>
 
                 @if($isAdmin || $isTreg || $isTsel || $isCanv)
                 <li class="nav-header">System Management</li>

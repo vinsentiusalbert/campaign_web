@@ -6,6 +6,7 @@ use App\Http\Controllers\FrontController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CampaignMobileController;
+use App\Http\Controllers\CampaignIndihomeController;
 
 Route::get('/', [FrontController::class, 'index'])->name('home');
 Route::get('/login', [FrontController::class, 'index'])->name('login');
@@ -42,10 +43,12 @@ Route::middleware(['auth', 'checkrole:Admin,User'])->group(function () {
     Route::prefix('campaign-indihome')->name('campaign-indihome.')->middleware('auth')->group(function () {
         Route::get('/', [CampaignIndihomeController::class, 'index'])->name('index');
         Route::get('/create', [CampaignIndihomeController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignIndihomeController::class, 'data'])->name('data');
         Route::post('/store', [CampaignIndihomeController::class, 'store'])->name('store');
-        Route::get('/{campaignIndihome}/edit', [CampaignIndihomeController::class, 'edit'])->name('edit');
+        Route::get('/{id}/edit', [CampaignIndihomeController::class, 'edit'])->name('edit');
         Route::put('/{campaignIndihome}', [CampaignIndihomeController::class, 'update'])->name('update');
-        Route::delete('/{campaignIndihome}', [CampaignIndihomeController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}', [CampaignIndihomeController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignIndihomeController::class, 'destroy'])->name('destroy');
     });
 });
 

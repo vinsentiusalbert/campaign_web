@@ -33,8 +33,8 @@ return new class extends Migration
             $table->string('longitude_latitude')->nullable();
             $table->string('radius')->nullable();
 
-            $table->timestamps('periode_campaign_start')->nullable();
-            $table->timestamps('periode_campaign_end')->nullable();
+            $table->timestamp('periode_campaign_start')->nullable();
+            $table->timestamp('periode_campaign_end')->nullable();
             $table->integer('jumlah_blast')->nullable();
 
             // Carousel Product 1–5

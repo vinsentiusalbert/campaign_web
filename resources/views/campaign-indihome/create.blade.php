@@ -1,14 +1,14 @@
 @extends('master')
 
-@section('title', 'Create Mobile Campaign')
+@section('title', 'Create Campaign Indihome')
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<!-- Summernote CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+
 <style>
-    .card-title { font-weight: bold; }
     .form-group label { font-weight: 600; }
+    .text-danger { font-size: 13px; }
     .select2-container .select2-selection--single {
         height: 35px !important;
         padding: 8px 12px;
@@ -19,13 +19,11 @@
         font-size: 15px;
         background-color: #fff;
     }
-    .text-danger { font-size: 13px; }
-    /* Container for periode start/end side by side */
-    .periode-container {
+    .periode-wrapper {
         display: flex;
-        gap: 20px;
+        gap: 15px;
     }
-    .periode-container > div {
+    .periode-wrapper > div {
         flex: 1;
     }
 </style>
@@ -34,142 +32,121 @@
 @section('content')
 <div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title">Create Mobile Campaign</h3>
+        <h3 class="card-title">Create Campaign Indihome</h3>
     </div>
 
     <div class="card-body">
-        <form action="{{ route('campaign-mobile.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('campaign-indihome.store') }}" method="POST">
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+
             {{-- AREA --}}
             <div class="form-group">
-                <label for="area">Area</label>
-                <input type="text" id="area" name="area" class="form-control" value="{{ old('area') }}">
-                @error('area')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Area</label>
+                <input type="text" name="area" class="form-control" value="{{ old('area') }}">
             </div>
 
             {{-- REGION --}}
             <div class="form-group">
-                <label for="region">Region</label>
-                <input type="text" id="region" name="region" class="form-control" value="{{ old('region') }}">
-                @error('region')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Region</label>
+                <input type="text" name="region" class="form-control" value="{{ old('region') }}">
             </div>
 
             {{-- BRANCH --}}
             <div class="form-group">
-                <label for="branch">Branch</label>
-                <input type="text" id="branch" name="branch" class="form-control" value="{{ old('branch') }}">
-                @error('branch')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Branch</label>
+                <input type="text" name="branch" class="form-control" value="{{ old('branch') }}">
             </div>
 
-            {{-- CAMPAIGN USECASE (Dropdown) --}}
+            {{-- CAMPAIGN USECASE --}}
             <div class="form-group">
-                <label for="campaign_usecase">Campaign Usecase</label>
-                <select id="campaign_usecase" name="campaign_usecase" class="form-control select2">
-                    <option value="">-- Pilih Campaign Usecase --</option>
-                    @foreach(['ShortMax', 'Netflix', 'YouTube', 'MyTelkomsel'] as $usecase)
-                        <option value="{{ $usecase }}" {{ old('campaign_usecase') == $usecase ? 'selected' : '' }}>{{ $usecase }}</option>
-                    @endforeach
+                <label>Campaign Usecase</label>
+                <select name="campaign_usecase" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="ShortMax">ShortMax</option>
+                    <option value="Netflix">Netflix</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="MyTelkomsel">MyTelkomsel</option>
                 </select>
-                @error('campaign_usecase')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
             </div>
 
-            {{-- MESSAGE BODY (Summernote WYSIWYG) --}}
+            {{-- MESSAGE BODY --}}
             <div class="form-group">
-                <label for="message_body">Message Body</label>
-                <textarea id="message_body" name="message_body" class="form-control">{{ old('message_body') }}</textarea>
-                @error('message_body')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Message Body</label>
+                <textarea name="message_body" id="message_body" class="form-control">{{ old('message_body') }}</textarea>
             </div>
 
             {{-- KV MESSAGE LINK --}}
             <div class="form-group">
-                <label for="kv_message_link">KV Message Link (GDrive)</label>
-                <input type="text" id="kv_message_link" name="kv_message_link" class="form-control" value="{{ old('kv_message_link') }}">
-                @error('kv_message_link')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>KV Message Link</label>
+                <input type="text" name="kv_message_link" class="form-control" value="{{ old('kv_message_link') }}">
             </div>
 
-            {{-- SHORTMAX USER TYPE (Dropdown) --}}
+            {{-- CAMPAIGN TYPE --}}
             <div class="form-group">
-                <label for="shortmax_user_type">Shortmax User Type</label>
-                <select id="shortmax_user_type" name="shortmax_user_type" class="form-control select2">
-                    <option value="">-- Pilih Shortmax User Type --</option>
-                    @foreach(['Download', 'Belum Download'] as $type)
-                        <option value="{{ $type }}" {{ old('shortmax_user_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
-                    @endforeach
+                <label>Campaign Type</label>
+                <select name="campaign_type" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="Broadcast">Broadcast</option>
+                    <option value="Location Based">Location Based</option>
                 </select>
-                @error('shortmax_user_type')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
             </div>
 
-            {{-- NAMA FILE WHITELIST --}}
+            {{-- WHITELIST --}}
             <div class="form-group">
-                <label for="nama_file_whitelist">Nama File Whitelist</label>
-                <textarea id="nama_file_whitelist" name="nama_file_whitelist" class="form-control">{{ old('nama_file_whitelist') }}</textarea>
-                @error('nama_file_whitelist')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Nama File Whitelist</label>
+                <input type="text" name="nama_file_whitelist" class="form-control">
             </div>
 
-            {{-- PERIODE CAMPAIGN START & END (side by side) --}}
-            <div class="periode-container">
+            {{-- LOKASI --}}
+            <div class="form-group">
+                <label>Longitude, Latitude</label>
+                <input type="text" name="longitude_latitude" class="form-control" placeholder="-6.200000,106.816666">
+            </div>
+
+            <div class="form-group">
+                <label>Radius</label>
+                <input type="text" name="radius" class="form-control">
+            </div>
+
+            {{-- PERIODE --}}
+            <div class="periode-wrapper">
                 <div class="form-group">
-                    <label for="periode_campaign_start">Periode Campaign Start</label>
-                    <input type="date" id="periode_campaign_start" name="periode_campaign_start" class="form-control" value="{{ old('periode_campaign_start') }}">
-                    @error('periode_campaign_start')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    <label>Periode Campaign Start</label>
+                    <input type="datetime-local" name="periode_campaign_start" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="periode_campaign_end">Periode Campaign End</label>
-                    <input type="date" id="periode_campaign_end" name="periode_campaign_end" class="form-control" value="{{ old('periode_campaign_end') }}">
-                    @error('periode_campaign_end')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    <label>Periode Campaign End</label>
+                    <input type="datetime-local" name="periode_campaign_end" class="form-control">
                 </div>
             </div>
 
-            {{-- JUMLAH BLAST (number only) --}}
+            {{-- JUMLAH BLAST --}}
             <div class="form-group">
-                <label for="jumlah_blast">Jumlah Blast</label>
-                <input type="number" min="0" id="jumlah_blast" name="jumlah_blast" class="form-control" value="{{ old('jumlah_blast') }}">
-                @error('jumlah_blast')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>Jumlah Blast</label>
+                <input type="number" name="jumlah_blast" class="form-control">
             </div>
 
-            {{-- CC --}}
-            <div class="form-group">
-                <label for="cc">CC</label>
-                <textarea id="cc" name="cc" class="form-control">{{ old('cc') }}</textarea>
-                @error('cc')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
+            <hr>
 
-            {{-- NAMA CAMPAIGN --}}
-            <div class="form-group">
-                <label for="nama_campaign">Nama Campaign</label>
-                <input type="text" id="nama_campaign" name="nama_campaign" class="form-control" value="{{ old('nama_campaign') }}">
-                @error('nama_campaign')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+            {{-- CAROUSEL PRODUCTS --}}
+            @for ($i = 1; $i <= 5; $i++)
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Carousel Product {{ $i }}</label>
+                    <input type="text" name="carousel_product_{{ $i }}" class="form-control">
+                </div>
+
+                <div class="form-group col-md-8">
+                    <label>KV Product {{ $i }}</label>
+                    <textarea name="kv_product_{{ $i }}" class="form-control"></textarea>
+                </div>
             </div>
+                <hr>
+            @endfor
 
             <div class="form-group d-flex gap-2">
-                <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
+                <a href="{{ route('campaign-indihome.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
                 <button type="submit" class="btn btn-primary flex-grow-1 m-1">Simpan</button>
             </div>
         </form>
@@ -179,28 +156,21 @@
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- Summernote JS -->
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: "-- Pilih --",
-            allowClear: true,
-            width: '100%'
-        });
+$(document).ready(function () {
+    $('.select2').select2({ width: '100%' });
 
-        $('#message_body').summernote({
-            height: 300,
-            toolbar: [
-              ['style', ['bold', 'italic', 'underline', 'clear']],
-              ['font', ['strikethrough']],
-              ['para', ['ul', 'ol', 'paragraph']],
-              ['insert', ['link', 'picture']],
-              ['view', ['codeview']]
-            ]
-        });
+    $('#message_body').summernote({
+        height: 250,
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline']],
+            ['para', ['ul', 'ol']],
+            ['insert', ['link']],
+            ['view', ['codeview']]
+        ]
     });
+});
 </script>
 @endsection

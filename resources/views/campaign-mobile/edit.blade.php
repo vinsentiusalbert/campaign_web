@@ -30,7 +30,7 @@
 @endsection
 
 @section('content')
-<div class="card card-primary">
+<div class="card card-warning">
     <div class="card-header">
         <h3 class="card-title">Edit Mobile Campaign</h3>
     </div>
