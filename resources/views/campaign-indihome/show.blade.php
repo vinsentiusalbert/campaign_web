@@ -126,11 +126,11 @@
 
         {{-- ACTION --}}
         <div class="form-group d-flex gap-2 mt-3">
-            <a href="{{ route('campaign-indihome.index') }}" class="btn btn-secondary flex-grow-1">
+            <a href="{{ route('campaign-indihome.index') }}" class="btn btn-secondary flex-grow-1 m-1">
                 Kembali
             </a>
 
-            <a href="{{ route('campaign-indihome.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1">
+            <a href="{{ route('campaign-indihome.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1 m-1">
                 Edit
             </a>
         </div>

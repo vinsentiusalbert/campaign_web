@@ -198,9 +198,7 @@
                         <select class="form-control" id="role" name="role" required>
                             <option value="">Pilih Role</option>
                             <option value="Admin">Admin</option>
-                            <option value="Tsel">Tsel</option>
-                            {{-- <option value="Treg">Treg</option> --}}
-                            <option value="Canvasser">Canvasser</option>
+                            <option value="User">User</option>
                         </select>
                     </div>
                     
@@ -290,7 +288,7 @@
                         let badgeClass = '';
                         if (data === 'Admin') {
                             badgeClass = 'badge-danger';
-                        } else if (data === 'Tsel') {
+                        } else if (data === 'User') {
                             badgeClass = 'badge-success';
                         } else if (data === 'Treg') {
                             badgeClass = 'badge-info';

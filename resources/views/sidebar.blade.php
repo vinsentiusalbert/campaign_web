@@ -16,6 +16,7 @@
                 $isTsel = $user->role === 'Tsel';
                 $isTreg = $user->role === 'Treg';
                 $isCanv = $user->role === 'Canvasser';
+                $isUser = $user->role === 'User';
                 @endphp
 
                 @if($isAdmin && $user->email === 'admin@telkomsel.co.id')
@@ -24,6 +25,8 @@
                 <span class="badge badge-warning">ADMIN</span>
                 @elseif($user->role === 'Tsel')
                 <span class="badge badge-success">TSEL</span>
+                @elseif($user->role === 'User')
+                <span class="badge badge-success">User</span>
                 @elseif($isTreg)
                 @php
                 $treg_name = DB::table('treg')->where('id', $user->treg_id)->value('treg_name');
@@ -53,7 +56,7 @@
                     </a>
                 </li>
 
-                @if($isAdmin || $isTreg || $isTsel || $isCanv)
+                @if($isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-header">System Management</li>
                 @endif
                 @if($isAdmin)
@@ -65,7 +68,7 @@
                     </a>
                 </li>
                 @endif
-                @if($isAdmin || $isTreg || $isTsel || $isCanv)
+                @if($isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-item">
                     <a href="{{ url('change-password') }}"
                         class="nav-link waves-effect {{ request()->routeIs('change-password') ? 'active' : '' }}">
@@ -78,7 +81,7 @@
 
 
                 {{-- ===== Logout untuk semua role yang ditangani di atas ===== --}}
-                @if($isAdmin || $isTreg || $isTsel || $isCanv)
+                @if($isAdmin || $isTreg || $isTsel || $isCanv || $isUser)
                 <li class="nav-header">LOGOUT</li>
                 <li class="nav-item">
                     <a href="{{ url('logout') }}"

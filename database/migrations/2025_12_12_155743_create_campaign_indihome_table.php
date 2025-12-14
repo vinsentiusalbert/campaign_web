@@ -37,6 +37,7 @@ return new class extends Migration
             $table->timestamp('periode_campaign_end')->nullable();
             $table->integer('jumlah_blast')->nullable();
 
+            $table->string('nama_template')->nullable();
             // Carousel Product 1–5
             $table->string('carousel_product_1')->nullable();
             $table->text('kv_product_1')->nullable();

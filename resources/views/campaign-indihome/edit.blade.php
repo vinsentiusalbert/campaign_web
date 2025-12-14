@@ -7,7 +7,26 @@
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css" rel="stylesheet">
 
 <style>
+    .card-title { font-weight: bold; }
     .form-group label { font-weight: 600; }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+        padding: 8px 12px;
+        border: 1px solid #ced4da !important;
+        border-radius: 6px !important;
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        background-color: #fff;
+    }
+    .text-danger { font-size: 13px; }
+    .periode-container {
+        display: flex;
+        gap: 20px;
+    }
+    .periode-container > div {
+        flex: 1;
+    }
 </style>
 @endsection
 
@@ -47,15 +66,37 @@
             {{-- USECASE --}}
             <div class="form-group">
                 <label>Campaign Usecase</label>
-                <input type="text" name="campaign_usecase" class="form-control"
-                    value="{{ old('campaign_usecase', $campaign->campaign_usecase) }}">
+                <select name="campaign_usecase" class="form-control select2">
+                    <option value="">-- Pilih Usecase --</option>
+                    <option value="Sales Activation"
+                        {{ old('campaign_usecase', $campaign->campaign_usecase) == 'Sales Activation' ? 'selected' : '' }}>
+                        Sales Activation
+                    </option>
+                    <option value="Retention"
+                        {{ old('campaign_usecase', $campaign->campaign_usecase) == 'Retention' ? 'selected' : '' }}>
+                        Retention
+                    </option>
+                    <option value="Reminder"
+                        {{ old('campaign_usecase', $campaign->campaign_usecase) == 'Reminder' ? 'selected' : '' }}>
+                        Reminder
+                    </option>
+                </select>
             </div>
 
             {{-- CAMPAIGN TYPE --}}
             <div class="form-group">
                 <label>Campaign Type</label>
-                <input type="text" name="campaign_type" class="form-control"
-                    value="{{ old('campaign_type', $campaign->campaign_type) }}">
+                <select name="campaign_type" class="form-control select2">
+                    <option value="">-- Pilih Type --</option>
+                    <option value="WhiteList"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'WhiteList' ? 'selected' : '' }}>
+                        WhiteList
+                    </option>
+                    <option value="LBA"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'LBA' ? 'selected' : '' }}>
+                        LBA
+                    </option>
+                </select>
             </div>
 
             {{-- MESSAGE BODY --}}
@@ -102,15 +143,15 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label>Periode Start</label>
-                    <input type="date" name="periode_campaign_start"
+                    <input type="datetime-local" name="periode_campaign_start"
                         class="form-control"
-                        value="{{ old('periode_campaign_start', optional($campaign->periode_campaign_start)->format('Y-m-d')) }}">
+                        value="{{ old('periode_campaign_start', $campaign->periode_campaign_start?->format('Y-m-d\TH:i')) }}">
                 </div>
                 <div class="form-group col-md-6">
                     <label>Periode End</label>
-                    <input type="date" name="periode_campaign_end"
+                    <input type="datetime-local" name="periode_campaign_end"
                         class="form-control"
-                        value="{{ old('periode_campaign_end', optional($campaign->periode_campaign_end)->format('Y-m-d')) }}">
+                        value="{{ old('periode_campaign_end', $campaign->periode_campaign_end?->format('Y-m-d\TH:i')) }}">
                 </div>
             </div>
 
@@ -121,17 +162,21 @@
                     value="{{ old('jumlah_blast', $campaign->jumlah_blast) }}">
             </div>
 
+            <div class="form-group">
+                <label>Nama Template</label>
+                <input type="text" name="nama_template" class="form-control"
+                    value="{{ old('nama_template', $campaign->nama_template) }}">
+            </div>
             {{-- CAROUSEL PRODUCT 1 - 5 --}}
             @for($i=1; $i<=5; $i++)
                 <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label>Carousel Product {{ $i }}</label>
-                        <input type="text"
-                            name="carousel_product_{{ $i }}"
-                            class="form-control"
-                            value="{{ old('carousel_product_'.$i, $campaign->{'carousel_product_'.$i}) }}">
-                    </div>
                     <div class="form-group col-md-8">
+                        <label>Carousel Product {{ $i }}</label>
+                        <textarea name="carousel_product_{{ $i }}"
+                            class="form-control"
+                            rows="2">{{ old('carousel_product_'.$i, $campaign->{'carousel_product_'.$i}) }}</textarea>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label>KV Product {{ $i }}</label>
                         <textarea name="kv_product_{{ $i }}"
                             class="form-control"
@@ -154,6 +199,16 @@
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    $('.select2').select2({
+        width: '100%',
+        placeholder: '-- Pilih --',
+        allowClear: true
+    });
+});
+</script>
 
 <script>
 $(function () {

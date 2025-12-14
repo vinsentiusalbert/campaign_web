@@ -63,10 +63,10 @@
                 <label>Campaign Usecase</label>
                 <select name="campaign_usecase" class="form-control select2">
                     <option value="">-- Pilih --</option>
-                    <option value="ShortMax">ShortMax</option>
-                    <option value="Netflix">Netflix</option>
+                    <option value="Sales Activation">Sales Activation</option>
+                    <option value="Retention">Retention</option>
                     <option value="YouTube">YouTube</option>
-                    <option value="MyTelkomsel">MyTelkomsel</option>
+                    <option value="Reminder">Reminder</option>
                 </select>
             </div>
 
@@ -87,8 +87,8 @@
                 <label>Campaign Type</label>
                 <select name="campaign_type" class="form-control select2">
                     <option value="">-- Pilih --</option>
-                    <option value="Broadcast">Broadcast</option>
-                    <option value="Location Based">Location Based</option>
+                    <option value="Whitelist">Whitelist</option>
+                    <option value="LBA">LBA</option>
                 </select>
             </div>
 
@@ -127,17 +127,21 @@
                 <input type="number" name="jumlah_blast" class="form-control">
             </div>
 
+            <div class="form-group">
+                <label>Nama Template</label>
+                <input type="text" name="nama_template" class="form-control">
+            </div>
             <hr>
 
             {{-- CAROUSEL PRODUCTS --}}
             @for ($i = 1; $i <= 5; $i++)
             <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-8">
                     <label>Carousel Product {{ $i }}</label>
-                    <input type="text" name="carousel_product_{{ $i }}" class="form-control">
+                    <textarea name="carousel_product_{{ $i }}" class="form-control"></textarea>
                 </div>
 
-                <div class="form-group col-md-8">
+                <div class="form-group col-md-4">
                     <label>KV Product {{ $i }}</label>
                     <textarea name="kv_product_{{ $i }}" class="form-control"></textarea>
                 </div>
