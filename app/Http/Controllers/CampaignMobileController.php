@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CampaignMobile;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Storage;
 
 class CampaignMobileController extends Controller
 {
@@ -58,25 +59,69 @@ class CampaignMobileController extends Controller
             'branch' => 'nullable|string|max:255',
             'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
             'message_body' => 'nullable|string',
-            'kv_message_link' => 'nullable|url|max:1000',
+
+            // KV IMAGE
+            'kv_message_link' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+
             'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
-            'nama_file_whitelist' => 'nullable|string',
+
+            // WHITELIST FILE
+            'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
+
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
             'jumlah_blast' => 'nullable|integer|min:0',
-            'cc' => 'nullable|string',
+
+            // CC FILE (EXCEL)
+            'cc' => 'nullable|file|mimes:xlsx,xls,csv|max:5120',
+
             'nama_campaign' => 'nullable|string|max:255',
         ]);
-        
+
         $validated['user_id'] = auth()->id();
 
-        // Simpan ke database
-        $campaign = CampaignMobile::create($validated);
+        // =========================
+        // KV MESSAGE IMAGE
+        // =========================
+        if ($request->hasFile('kv_message_link')) {
+            $image = $request->file('kv_message_link');
+            $imageName = time() . '_' . $image->getClientOriginalName();
 
-        // Redirect ke halaman index atau detail dengan pesan sukses
-        return redirect()->route('campaign-mobile.index')
+            $image->storeAs('campaign/kv-message', $imageName, 'public');
+            $validated['kv_message_link'] = $imageName; // simpan nama file
+        }
+
+        // =========================
+        // WHITELIST FILE
+        // =========================
+        if ($request->hasFile('nama_file_whitelist')) {
+            $file = $request->file('nama_file_whitelist');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            $file->storeAs('campaign/whitelist', $fileName, 'public');
+            $validated['nama_file_whitelist'] = $fileName;
+        }
+
+        // =========================
+        // CC FILE
+        // =========================
+        if ($request->hasFile('cc')) {
+            $ccFile = $request->file('cc');
+            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+
+            $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
+            $validated['cc'] = $ccFileName;
+        }
+
+        // Simpan ke database
+        CampaignMobile::create($validated);
+
+        return redirect()
+            ->route('campaign-mobile.index')
             ->with('success', 'Campaign mobile berhasil dibuat.');
     }
+
+
 
     /**
      * Display the specified resource.
@@ -101,26 +146,94 @@ class CampaignMobileController extends Controller
     {
         $campaign = CampaignMobile::findOrFail($id);
 
+        // Validasi data
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
             'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
             'message_body' => 'nullable|string',
-            'kv_message_link' => 'nullable|url|max:1000',
+
+            // KV IMAGE
+            'kv_message_link' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+
             'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
-            'nama_file_whitelist' => 'nullable|string',
+
+            // WHITELIST FILE
+            'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
+
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
             'jumlah_blast' => 'nullable|integer|min:0',
-            'cc' => 'nullable|string',
+
+            // ✅ CC FILE (EXCEL)
+            'cc' => 'nullable|file|mimes:xlsx,xls,csv|max:5120',
+
             'nama_campaign' => 'nullable|string|max:255',
         ]);
 
+        // =========================
+        // KV MESSAGE IMAGE
+        // =========================
+        if ($request->hasFile('kv_message_link')) {
+
+            if ($campaign->kv_message_link) {
+                Storage::disk('public')->delete(
+                    'campaign/kv-message/' . $campaign->kv_message_link
+                );
+            }
+
+            $image = $request->file('kv_message_link');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+
+            $image->storeAs('campaign/kv-message', $imageName, 'public');
+            $validated['kv_message_link'] = $imageName;
+        }
+
+        // =========================
+        // WHITELIST FILE
+        // =========================
+        if ($request->hasFile('nama_file_whitelist')) {
+
+            if ($campaign->nama_file_whitelist) {
+                Storage::disk('public')->delete(
+                    'campaign/whitelist/' . $campaign->nama_file_whitelist
+                );
+            }
+
+            $file = $request->file('nama_file_whitelist');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            $file->storeAs('campaign/whitelist', $fileName, 'public');
+            $validated['nama_file_whitelist'] = $fileName;
+        }
+
+        // =========================
+        // CC FILE
+        // =========================
+        if ($request->hasFile('cc')) {
+
+            if ($campaign->cc) {
+                Storage::disk('public')->delete(
+                    'campaign/cc/' . $campaign->cc
+                );
+            }
+
+            $ccFile = $request->file('cc');
+            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+
+            $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
+            $validated['cc'] = $ccFileName;
+        }
+
         $campaign->update($validated);
 
-        return redirect()->route('campaign-mobile.index')->with('success', 'Campaign berhasil diperbarui.');
+        return redirect()
+            ->route('campaign-mobile.index')
+            ->with('success', 'Campaign berhasil diperbarui.');
     }
+
+
 
     /**
      * Remove the specified resource from storage.

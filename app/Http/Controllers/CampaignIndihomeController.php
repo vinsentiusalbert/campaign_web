@@ -63,22 +63,33 @@ class CampaignIndihomeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required',
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
+
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
-            'kv_message_link' => 'nullable|string|max:1000',
-            'campaign_type' => 'nullable|string|max:255',
-            'nama_file_whitelist' => 'nullable|string|max:255',
+
+            // Image
+            'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            
+            'campaign_type' => 'required|in:Broadcast,LBA',
+
+            // Excel
+            'file_whitelist' => 'nullable|file|mimes:xls,xlsx',
+
             'longitude_latitude' => 'nullable|string|max:255',
             'radius' => 'nullable|string|max:255',
+
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
+
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+
             'carousel_product_1' => 'nullable|string|max:255',
             'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
@@ -90,14 +101,48 @@ class CampaignIndihomeController extends Controller
             'carousel_product_5' => 'nullable|string|max:255',
             'kv_product_5' => 'nullable|string',
         ]);
-        // dd($request->all());    
 
-        CampaignIndihome::create($request->all());
+        /* ===============================
+        | HANDLE FILE UPLOAD
+        =============================== */
+
+        // 🔹 KV Message Image
+        if ($request->hasFile('kv_message_image')) {
+
+            $image = $request->file('kv_message_image');
+
+            $imageName = time() . '_' . $image->getClientOriginalName();
+
+            $image->storeAs('campaign/kv-message', $imageName, 'public');
+
+            // SAVE ONLY FILE NAME
+            $validated['kv_message_link'] = $imageName;
+        }
+
+        // 🔹 Whitelist Excel
+        if ($request->hasFile('file_whitelist')) {
+
+            $file = $request->file('file_whitelist');
+
+            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            $file->storeAs('campaign/whitelist', $fileName, 'public');
+
+            // SAVE ONLY FILE NAME
+            $validated['nama_file_whitelist'] = $fileName;
+        }
+
+        /* ===============================
+        | SAVE DATA
+        =============================== */
+
+        CampaignIndihome::create($validated);
 
         return redirect()
             ->route('campaign-indihome.index')
             ->with('success', 'Campaign berhasil dibuat');
     }
+
 
     /**
      * Display the specified resource.
@@ -127,17 +172,27 @@ class CampaignIndihomeController extends Controller
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
+
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
-            'kv_message_link' => 'nullable|string|max:1000',
-            'campaign_type' => 'nullable|string|max:255',
-            'nama_file_whitelist' => 'nullable|string|max:255',
+
+            // IMAGE
+            'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+
+            'campaign_type' => 'required|in:Broadcast,LBA',
+
+            // EXCEL
+            'file_whitelist' => 'nullable|mimes:xls,xlsx|max:5120',
+
             'longitude_latitude' => 'nullable|string|max:255',
             'radius' => 'nullable|string|max:255',
+
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
+
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+
             'carousel_product_1' => 'nullable|string|max:255',
             'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
@@ -150,10 +205,58 @@ class CampaignIndihomeController extends Controller
             'kv_product_5' => 'nullable|string',
         ]);
 
+        /* ===============================
+        | KV MESSAGE IMAGE
+        =============================== */
+        if ($request->hasFile('kv_message_image')) {
+
+            // delete old image
+            if ($campaignIndihome->kv_message_image) {
+                Storage::disk('public')->delete(
+                    'campaign/kv-message/'.$campaignIndihome->kv_message_image
+                );
+            }
+
+            $image = $request->file('kv_message_image');
+            $imageName = time().'_'.$image->getClientOriginalName();
+
+            $image->storeAs('campaign/kv-message', $imageName, 'public');
+
+            // save only name
+            $validated['kv_message_link'] = $imageName;
+        }
+
+        /* ===============================
+        | WHITELIST FILE
+        =============================== */
+        if ($request->hasFile('file_whitelist')) {
+
+            // delete old file
+            if ($campaignIndihome->file_whitelist) {
+                Storage::disk('public')->delete(
+                    'campaign/whitelist/'.$campaignIndihome->file_whitelist
+                );
+            }
+
+            $file = $request->file('file_whitelist');
+            $fileName = time().'_'.$file->getClientOriginalName();
+
+            $file->storeAs('campaign/whitelist', $fileName, 'public');
+
+            // save only name
+            $validated['nama_file_whitelist'] = $fileName;
+        }
+
+        /* ===============================
+        | UPDATE DATA
+        =============================== */
         $campaignIndihome->update($validated);
 
-        return redirect()->route('campaign-indihome.index')->with('success', 'Campaign Indihome berhasil diperbarui!');
+        return redirect()
+            ->route('campaign-indihome.index')
+            ->with('success', 'Campaign Indihome berhasil diperbarui!');
     }
+
 
     /**
      * Hapus campaign Indihome.

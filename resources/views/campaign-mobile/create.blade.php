@@ -4,7 +4,6 @@
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<!-- Summernote CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
 <style>
     .card-title { font-weight: bold; }
@@ -20,13 +19,24 @@
         background-color: #fff;
     }
     .text-danger { font-size: 13px; }
-    /* Container for periode start/end side by side */
     .periode-container {
         display: flex;
         gap: 20px;
     }
     .periode-container > div {
         flex: 1;
+    }
+    #kvPreview {
+        max-width: 300px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        border-radius: 5px;
+        display: none;
+    }
+    #whitelistPreview {
+        margin-top: 5px;
+        font-style: italic;
     }
 </style>
 @endsection
@@ -41,34 +51,29 @@
         <form action="{{ route('campaign-mobile.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+
             {{-- AREA --}}
             <div class="form-group">
                 <label for="area">Area</label>
                 <input type="text" id="area" name="area" class="form-control" value="{{ old('area') }}">
-                @error('area')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('area') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
             {{-- REGION --}}
             <div class="form-group">
                 <label for="region">Region</label>
                 <input type="text" id="region" name="region" class="form-control" value="{{ old('region') }}">
-                @error('region')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('region') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
             {{-- BRANCH --}}
             <div class="form-group">
                 <label for="branch">Branch</label>
                 <input type="text" id="branch" name="branch" class="form-control" value="{{ old('branch') }}">
-                @error('branch')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('branch') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- CAMPAIGN USECASE (Dropdown) --}}
+            {{-- CAMPAIGN USECASE --}}
             <div class="form-group">
                 <label for="campaign_usecase">Campaign Usecase</label>
                 <select id="campaign_usecase" name="campaign_usecase" class="form-control select2">
@@ -77,100 +82,98 @@
                         <option value="{{ $usecase }}" {{ old('campaign_usecase') == $usecase ? 'selected' : '' }}>{{ $usecase }}</option>
                     @endforeach
                 </select>
-                @error('campaign_usecase')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('campaign_usecase') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- MESSAGE BODY (Summernote WYSIWYG) --}}
+            {{-- MESSAGE BODY --}}
             <div class="form-group">
                 <label for="message_body">Message Body</label>
                 <textarea id="message_body" name="message_body" class="form-control">{{ old('message_body') }}</textarea>
-                @error('message_body')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('message_body') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- KV MESSAGE LINK --}}
+            {{-- KV MESSAGE LINK (Upload Image + Preview) --}}
             <div class="form-group">
-                <label for="kv_message_link">KV Message Link (GDrive)</label>
-                <input type="text" id="kv_message_link" name="kv_message_link" class="form-control" value="{{ old('kv_message_link') }}">
-                @error('kv_message_link')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                <label>KV (Key-Visual) Message</label>
+                <input type="file" id="kv_message_link" name="kv_message_link" class="form-control" accept="image/*" onchange="previewKV(this)">
+                <small class="text-muted">Preview:</small><br>
+                <img id="kvPreview" src="#" alt="KV Preview">
+                @error('kv_message_link') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- SHORTMAX USER TYPE (Dropdown) --}}
+            {{-- SHORTMAX USER TYPE --}}
             <div class="form-group">
-                <label for="shortmax_user_type">Shortmax User Type</label>
+                <label for="shortmax_user_type">User Type</label>
                 <select id="shortmax_user_type" name="shortmax_user_type" class="form-control select2">
-                    <option value="">-- Pilih Shortmax User Type --</option>
+                    <option value="">-- Pilih User Type --</option>
                     @foreach(['Download', 'Belum Download'] as $type)
                         <option value="{{ $type }}" {{ old('shortmax_user_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
                     @endforeach
                 </select>
-                @error('shortmax_user_type')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('shortmax_user_type') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- NAMA FILE WHITELIST --}}
+            {{-- WHITELIST FILE --}}
             <div class="form-group">
-                <label for="nama_file_whitelist">Nama File Whitelist</label>
-                <textarea id="nama_file_whitelist" name="nama_file_whitelist" class="form-control">{{ old('nama_file_whitelist') }}</textarea>
+                <label>Upload Whitelist (Excel)</label>
+                <input type="file" 
+                       name="nama_file_whitelist" 
+                       class="form-control"
+                       accept=".xls,.xlsx">
+                <small class="text-muted">Format: XLS, XLSX</small>
+                
                 @error('nama_file_whitelist')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- PERIODE CAMPAIGN START & END (side by side) --}}
+            {{-- PERIODE CAMPAIGN START & END --}}
             <div class="periode-container">
                 <div class="form-group">
                     <label for="periode_campaign_start">Periode Campaign Start</label>
                     <input type="date" id="periode_campaign_start" name="periode_campaign_start" class="form-control" value="{{ old('periode_campaign_start') }}">
-                    @error('periode_campaign_start')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    @error('periode_campaign_start') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
                 <div class="form-group">
                     <label for="periode_campaign_end">Periode Campaign End</label>
                     <input type="date" id="periode_campaign_end" name="periode_campaign_end" class="form-control" value="{{ old('periode_campaign_end') }}">
-                    @error('periode_campaign_end')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    @error('periode_campaign_end') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
             </div>
 
-            {{-- JUMLAH BLAST (number only) --}}
+            {{-- JUMLAH BLAST --}}
             <div class="form-group">
                 <label for="jumlah_blast">Jumlah Blast</label>
                 <input type="number" min="0" id="jumlah_blast" name="jumlah_blast" class="form-control" value="{{ old('jumlah_blast') }}">
-                @error('jumlah_blast')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('jumlah_blast') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
-            {{-- CC --}}
+            {{-- CC FILE --}}
             <div class="form-group">
-                <label for="cc">CC</label>
-                <textarea id="cc" name="cc" class="form-control">{{ old('cc') }}</textarea>
+                <label>Upload CC (Excel)</label>
+                <input type="file"
+                    name="cc"
+                    class="form-control"
+                    accept=".xls,.xlsx">
+
+                <small class="text-muted">Format: XLS, XLSX</small>
+
                 @error('cc')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
 
             {{-- NAMA CAMPAIGN --}}
-            <div class="form-group">
+            <div class="form-group" style="display: none; ">
                 <label for="nama_campaign">Nama Campaign</label>
                 <input type="text" id="nama_campaign" name="nama_campaign" class="form-control" value="{{ old('nama_campaign') }}">
-                @error('nama_campaign')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                @error('nama_campaign') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
+            {{-- Tombol --}}
             <div class="form-group d-flex gap-2">
                 <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
-                <button type="submit" class="btn btn-primary flex-grow-1 m-1">Simpan</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary flex-grow-1 m-1">Simpan</button>
             </div>
         </form>
     </div>
@@ -179,28 +182,59 @@
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- Summernote JS -->
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: "-- Pilih --",
-            allowClear: true,
-            width: '100%'
-        });
-
-        $('#message_body').summernote({
-            height: 300,
-            toolbar: [
-              ['style', ['bold', 'italic', 'underline', 'clear']],
-              ['font', ['strikethrough']],
-              ['para', ['ul', 'ol', 'paragraph']],
-              ['insert', ['link', 'picture']],
-              ['view', ['codeview']]
-            ]
-        });
+$(document).ready(function() {
+    // Select2
+    $('.select2').select2({
+        placeholder: "-- Pilih --",
+        allowClear: true,
+        width: '100%'
     });
+
+    // Summernote
+    $('#message_body').summernote({
+        height: 300,
+        toolbar: [
+          ['style', ['bold', 'italic', 'underline', 'clear']],
+          ['font', ['strikethrough']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['insert', ['link', 'picture']],
+          ['view', ['codeview']]
+        ]
+    });
+
+    // Tombol submit hanya 1 kali
+    $('form').on('submit', function() {
+        $('#submitBtn').attr('disabled', true);
+    });
+});
+
+// Preview KV Image
+function previewKV(input) {
+    const preview = document.getElementById('kvPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.src = '#';
+        preview.style.display = 'none';
+    }
+}
+
+// Preview Excel filename
+function previewWhitelist(input) {
+    const preview = document.getElementById('whitelistPreview');
+    if (input.files && input.files[0]) {
+        preview.textContent = 'File terpilih: ' + input.files[0].name;
+    } else {
+        preview.textContent = '';
+    }
+}
 </script>
 @endsection

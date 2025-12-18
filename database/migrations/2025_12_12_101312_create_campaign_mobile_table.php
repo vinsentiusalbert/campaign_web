@@ -25,14 +25,14 @@ return new class extends Migration
             $table->text('kv_message_link')->nullable(); // Link GDrive KV Message
             $table->string('shortmax_user_type')->nullable();
 
-            $table->text('nama_file_whitelist')->nullable();
+            $table->string('nama_file_whitelist')->nullable();
 
             $table->date('periode_campaign_start')->nullable();
             $table->date('periode_campaign_end')->nullable();
 
             $table->integer('jumlah_blast')->nullable();
 
-            $table->text('cc')->nullable();
+            $table->string('cc')->nullable();
 
             $table->string('nama_campaign')->nullable();
 

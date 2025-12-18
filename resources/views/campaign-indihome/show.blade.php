@@ -12,6 +12,12 @@
         background-color: #f8f9fa;
         cursor: not-allowed;
     }
+    .preview-image {
+        max-width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 5px;
+    }
 </style>
 @endsection
 
@@ -59,16 +65,35 @@
             <textarea class="form-control" rows="5" readonly>{!! strip_tags($campaign->message_body) !!}</textarea>
         </div>
 
-        {{-- KV MESSAGE LINK --}}
+        {{-- KV MESSAGE IMAGE --}}
         <div class="form-group">
-            <label>KV Message Link</label>
-            <input type="text" class="form-control" value="{{ $campaign->kv_message_link }}" readonly>
+            <label>KV (Key-Visual) Message</label>
+            {{$campaign->kv_message_link}}
+            @if($campaign->kv_message_link)
+                <input type="text" class="form-control" value="{{ $campaign->kv_message_link }}" readonly>
+                <div class="mb-2">
+                    <img src="{{ asset('storage/campaign/kv-message/'.$campaign->kv_message_link) }}" 
+                         alt="KV Message" class="preview-image">
+                </div>
+            @else
+                <input type="text" class="form-control" value="-" readonly>
+            @endif
         </div>
 
         {{-- WHITELIST FILE --}}
         <div class="form-group">
-            <label>Nama File Whitelist</label>
-            <input type="text" class="form-control" value="{{ $campaign->nama_file_whitelist }}" readonly>
+            <label>Whitelist File (CSV / Excel)</label>
+            @if($campaign->nama_file_whitelist)
+                <input type="text" class="form-control" value="{{ $campaign->nama_file_whitelist }}" readonly>
+                <div class="mb-2">
+                    <a href="{{ asset('storage/campaign/whitelist/'.$campaign->nama_file_whitelist) }}" 
+                       class="btn btn-sm btn-outline-primary" target="_blank">
+                        Download {{ $campaign->nama_file_whitelist }}
+                    </a>
+                </div>
+            @else
+                <input type="text" class="form-control" value="-" readonly>
+            @endif
         </div>
 
         {{-- LONG LAT --}}
@@ -113,14 +138,11 @@
         @for($i = 1; $i <= 5; $i++)
             <div class="form-group">
                 <label>Carousel Product {{ $i }}</label>
-                <input type="text" class="form-control"
-                    value="{{ $campaign->{'carousel_product_'.$i} }}" readonly>
+                <input type="text" class="form-control" value="{{ $campaign->{'carousel_product_'.$i} }}" readonly>
             </div>
-
             <div class="form-group">
                 <label>KV Product {{ $i }}</label>
-                <input type="text" class="form-control"
-                    value="{{ $campaign->{'kv_product_'.$i} }}" readonly>
+                <input type="text" class="form-control" value="{{ $campaign->{'kv_product_'.$i} }}" readonly>
             </div>
         @endfor
 
@@ -129,7 +151,6 @@
             <a href="{{ route('campaign-indihome.index') }}" class="btn btn-secondary flex-grow-1 m-1">
                 Kembali
             </a>
-
             <a href="{{ route('campaign-indihome.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1 m-1">
                 Edit
             </a>

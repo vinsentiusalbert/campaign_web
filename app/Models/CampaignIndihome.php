@@ -34,6 +34,7 @@ class CampaignIndihome extends Model
         'kv_product_4',
         'carousel_product_5',
         'kv_product_5',
+        'cc',
     ];
 
     protected $casts = [

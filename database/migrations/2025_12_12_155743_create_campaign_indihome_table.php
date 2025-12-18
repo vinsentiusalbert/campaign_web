@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('campaign_usecase')->nullable();
             $table->longText('message_body')->nullable();
 
-            $table->text('kv_message_link')->nullable();
+            $table->string('kv_message_link')->nullable();
 
             $table->string('campaign_type')->nullable();
             $table->string('nama_file_whitelist')->nullable();
@@ -38,6 +38,7 @@ return new class extends Migration
             $table->integer('jumlah_blast')->nullable();
 
             $table->string('nama_template')->nullable();
+            $table->string('cc')->nullable();
             // Carousel Product 1–5
             $table->string('carousel_product_1')->nullable();
             $table->text('kv_product_1')->nullable();

@@ -15,6 +15,7 @@
         border-radius: 6px;
         border: 1px solid #ddd;
         margin-bottom: 15px;
+        word-break: break-word;
     }
     .message-box {
         background: #fff;
@@ -22,6 +23,14 @@
         border: 1px solid #ddd;
         padding: 15px;
         min-height: 150px;
+    }
+    .kv-preview {
+        max-width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 5px;
+        display: block;
+        margin-top: 5px;
     }
 </style>
 @endsection
@@ -64,25 +73,36 @@
             <div class="message-box">{!! $campaign->message_body !!}</div>
         </div>
 
-        {{-- KV MESSAGE LINK --}}
+        {{-- KV MESSAGE LINK (Preview Image) --}}
         <div>
-            <div class="detail-label">KV Message Link</div>
+            <label>KV (Key-Visual) Message</label>
             <div class="detail-box">
-                {{$campaign->kv_message_link}}
-                    
+                @if($campaign->kv_message_link)
+                    <img src="{{ asset('storage/'.$campaign->kv_message_link) }}" alt="KV Image" class="kv-preview">
+                @else
+                    -
+                @endif
             </div>
         </div>
 
         {{-- SHORTMAX USER TYPE --}}
         <div>
-            <div class="detail-label">Shortmax User Type</div>
+            <div class="detail-label">User Type</div>
             <div class="detail-box">{{ $campaign->shortmax_user_type ?? '-' }}</div>
         </div>
 
         {{-- NAMA FILE WHITELIST --}}
         <div>
             <div class="detail-label">Nama File Whitelist</div>
-            <div class="detail-box">{{ $campaign->nama_file_whitelist ?? '-' }}</div>
+            <div class="detail-box">
+                @if($campaign->nama_file_whitelist)
+                    <a href="{{ asset('storage/'.$campaign->nama_file_whitelist) }}" target="_blank">
+                        {{ basename($campaign->nama_file_whitelist) }}
+                    </a>
+                @else
+                    -
+                @endif
+            </div>
         </div>
 
         {{-- PERIODE --}}
@@ -91,7 +111,6 @@
                 <div class="detail-label">Periode Campaign Start</div>
                 <div class="detail-box">{{ $campaign->periode_campaign_start ?? '-' }}</div>
             </div>
-
             <div style="flex:1;">
                 <div class="detail-label">Periode Campaign End</div>
                 <div class="detail-box">{{ $campaign->periode_campaign_end ?? '-' }}</div>
@@ -106,8 +125,16 @@
 
         {{-- CC --}}
         <div>
-            <div class="detail-label">CC</div>
-            <div class="detail-box">{{ $campaign->cc ?? '-' }}</div>
+            <div class="detail-label">No CC</div>
+            <div class="detail-box">
+                @if($campaign->cc)
+                    <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">
+                        {{ basename($campaign->cc) }}
+                    </a>
+                @else
+                    -
+                @endif
+            </div>
         </div>
 
         {{-- NAMA CAMPAIGN --}}
@@ -116,6 +143,7 @@
             <div class="detail-box">{{ $campaign->nama_campaign ?? '-' }}</div>
         </div>
 
+        {{-- TOMBOL --}}
         <div class="form-group d-flex gap-2 mt-4">
             <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
             <a href="{{ route('campaign-mobile.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1 m-1">Edit</a>
