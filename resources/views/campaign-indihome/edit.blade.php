@@ -103,15 +103,18 @@
                 <label>Campaign Type</label>
                 <select name="campaign_type" id="campaign_type" class="form-control select2">
                     <option value="">-- Pilih --</option>
-                    <option value="Whitelist"
-                        {{ old('campaign_type', $campaign->campaign_type) == 'Whitelist' ? 'selected' : '' }}>
-                        Whitelist
+                    <option value="Broadcast"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'Broadcast' ? 'selected' : '' }}>
+                        Broadcast 
                     </option>
                     <option value="LBA"
                         {{ old('campaign_type', $campaign->campaign_type) == 'LBA' ? 'selected' : '' }}>
                         LBA
                     </option>
                 </select>
+                @error('campaign_type')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             {{-- WHITELIST FILE --}}
@@ -189,6 +192,26 @@
                 <input type="text" name="nama_template" class="form-control"
                        value="{{ old('nama_template', $campaign->nama_template) }}">
             </div>
+            
+            {{-- CC --}}
+            <div class="form-group">
+                <label>No CC (Excel)</label>
+                <input type="file"
+                    name="cc"
+                    class="form-control"
+                    accept=".xls,.xlsx">
+
+                @if($campaign->cc)
+                    <div class="mt-2">
+                        <p class="mb-1 text-muted">Current File:</p>
+                        <a href="{{ asset('storage/campaign/cc/'.$campaign->cc) }}"
+                        target="_blank"
+                        class="btn btn-sm btn-outline-primary">
+                            Download {{ $campaign->cc }}
+                        </a>
+                    </div>
+                @endif
+            </div>  
 
             <hr>
 
@@ -236,7 +259,7 @@ $(document).ready(function () {
     function toggleCampaignType() {
         let type = $('#campaign_type').val();
 
-        if (type === 'Whitelist') {
+        if (type === 'Broadcast') {
 
             // Enable whitelist
             $('#file_whitelist').prop('disabled', false);

@@ -82,7 +82,7 @@
 
         {{-- WHITELIST FILE --}}
         <div class="form-group">
-            <label>Whitelist File (CSV / Excel)</label>
+            <label>Whitelist File (Excel)</label>
             @if($campaign->nama_file_whitelist)
                 <input type="text" class="form-control" value="{{ $campaign->nama_file_whitelist }}" readonly>
                 <div class="mb-2">
@@ -133,7 +133,20 @@
             <label>Jumlah Blast</label>
             <input type="number" class="form-control" value="{{ $campaign->jumlah_blast }}" readonly>
         </div>
-
+        {{-- CC --}}
+        <div>
+            <div class="detail-label">No CC</div>
+            <div class="detail-box">
+                @if($campaign->cc)
+                    <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">
+                        {{ basename($campaign->cc) }}
+                    </a>
+                @else
+                    -
+                @endif
+            </div>
+        </div>
+        <hr>
         {{-- CAROUSEL PRODUCT --}}
         @for($i = 1; $i <= 5; $i++)
             <div class="form-group">

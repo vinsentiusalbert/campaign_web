@@ -115,6 +115,10 @@
                     <option value="Broadcast">Broadcast</option>
                     <option value="LBA">LBA</option>
                 </select>
+                
+                @error('campaign_type')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             {{-- WHITELIST FILE --}}
@@ -126,6 +130,9 @@
                     class="form-control"
                     accept=".xls,.xlsx">
                 <small class="text-muted">Format: XLS, XLSX</small>
+                @error('file_whitelist')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             {{-- LOKASI --}}
@@ -137,6 +144,9 @@
                         id="longitude_latitude"
                         class="form-control"
                         placeholder="-6.200000,106.816666">
+                    @error('longitude_latitude')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
@@ -145,6 +155,9 @@
                         name="radius"
                         id="radius"
                         class="form-control">
+                    @error('radius')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 </div>
             </div>
 
@@ -172,7 +185,20 @@
                 <label>Nama Template</label>
                 <input type="text" name="nama_template" class="form-control">
             </div>
+            {{-- CC FILE --}}
+            <div class="form-group">
+                <label>Upload CC (Excel)</label>
+                <input type="file"
+                    name="cc"
+                    class="form-control"
+                    accept=".xls,.xlsx">
 
+                <small class="text-muted">Format: XLS, XLSX</small>
+
+                @error('cc')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
             <hr>
 
             {{-- CAROUSEL --}}
