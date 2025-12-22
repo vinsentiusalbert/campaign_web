@@ -242,7 +242,7 @@
 
                     @csrf
 
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3" style="padding-top:5px; padding-bottom:5px; ">
 
                         <input autocomplete="on" class="form-control" type="text" name="email"
 
@@ -256,7 +256,7 @@
 
                     @enderror
 
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3" style="padding-top:5px; padding-bottom:5px; ">
 
                         <input autocomplete="off" class="form-control" type="password" name="password"
 

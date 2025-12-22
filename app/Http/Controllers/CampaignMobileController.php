@@ -78,7 +78,7 @@ class CampaignMobileController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
 
             // CC FILE (EXCEL)
-            'cc' => 'nullable|file|mimes:xlsx,xls,csv|max:5120',
+            'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'nama_campaign' => 'nullable|string|max:255',
         ]);
@@ -172,7 +172,7 @@ class CampaignMobileController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
 
             // ✅ CC FILE (EXCEL)
-            'cc' => 'nullable|file|mimes:xlsx,xls,csv|max:5120',
+            'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'nama_campaign' => 'nullable|string|max:255',
         ]);

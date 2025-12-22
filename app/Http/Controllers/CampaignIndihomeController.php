@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\File;
 
 
+
 class CampaignIndihomeController extends Controller
 {
     /**
@@ -107,8 +108,9 @@ class CampaignIndihomeController extends Controller
             'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
             'kv_product_5' => 'nullable|string',
+            // CC FILE (EXCEL)
+            'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
-
         /* ===============================
         | HANDLE FILE UPLOAD
         =============================== */
@@ -138,7 +140,16 @@ class CampaignIndihomeController extends Controller
             // SAVE ONLY FILE NAME
             $validated['nama_file_whitelist'] = $fileName;
         }
+        // =========================
+        // CC FILE
+        // =========================
+        if ($request->hasFile('cc')) {
+            $ccFile = $request->file('cc');
+            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
 
+            $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
+            $validated['cc'] = $ccFileName;
+        }
         /* ===============================
         | SAVE DATA
         =============================== */
@@ -147,7 +158,7 @@ class CampaignIndihomeController extends Controller
 
         return redirect()
             ->route('campaign-indihome.index')
-            ->with('success', 'Campaign berhasil dibuat');
+            ->with('success', 'Campaign Indihome berhasil dibuat');
     }
 
 
@@ -210,8 +221,26 @@ class CampaignIndihomeController extends Controller
             'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
             'kv_product_5' => 'nullable|string',
-        ]);
 
+            // ✅ CC FILE (EXCEL)
+            'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
+        ]);
+        if ($validated['campaign_type'] === 'LBA') {
+
+            // 🔴 LBA → whitelist harus NULL
+            if ($campaignIndihome->nama_file_whitelist) {
+                Storage::disk('public')
+                    ->delete('campaign/whitelist/' . $campaignIndihome->nama_file_whitelist);
+            }
+
+            $validated['nama_file_whitelist'] = null;
+
+        } elseif ($validated['campaign_type'] === 'Broadcast') {
+
+            // 🔴 Broadcast → LBA data harus NULL
+            $validated['longitude_latitude'] = null;
+            $validated['radius'] = null;
+        }
         /* ===============================
         | KV MESSAGE IMAGE
         =============================== */
@@ -254,6 +283,24 @@ class CampaignIndihomeController extends Controller
             $validated['nama_file_whitelist'] = $fileName;
         }
 
+        // =========================
+        // CC FILE
+        // =========================
+        if ($request->hasFile('cc')) {
+
+            if ($campaignIndihome->cc) {
+                Storage::disk('public')->delete(
+                    'campaign/cc/' . $campaignIndihome->cc
+                );
+            }
+
+            $ccFile = $request->file('cc');
+            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+
+            $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
+            $validated['cc'] = $ccFileName;
+        }
+
         /* ===============================
         | UPDATE DATA
         =============================== */
@@ -276,7 +323,7 @@ class CampaignIndihomeController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Campaign berhasil dihapus'
+            'message' => 'Campaign Indihome berhasil dihapus'
         ]);
     }
 
