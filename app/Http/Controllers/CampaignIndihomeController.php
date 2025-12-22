@@ -6,6 +6,11 @@ use App\Models\CampaignIndihome;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use ZipArchive;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\File;
+
 
 class CampaignIndihomeController extends Controller
 {
@@ -30,10 +35,12 @@ class CampaignIndihomeController extends Controller
             ->addColumn('aksi', function ($row) {
                 $edit = route('campaign-indihome.edit', $row->id);
                 $show = route('campaign-indihome.show', $row->id);
+                $downloadUrl = route('campaign-indihome.download', $row->id);
 
                 return '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
                     <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     <button onclick="deleteCampaign('.$row->id.')" class="btn btn-danger btn-sm">Hapus</button>
                 ';
             })
@@ -272,4 +279,95 @@ class CampaignIndihomeController extends Controller
             'message' => 'Campaign berhasil dihapus'
         ]);
     }
+
+    public function download($id)
+    {
+        $campaign = CampaignIndihome::findOrFail($id);
+
+        if (auth()->user()->role !== 'Admin' && $campaign->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $tempPath = storage_path('app/public/temp');
+        $zipFileName = 'campaign_'.$campaign->id.'.zip';
+        $zipPath = $tempPath.'/'.$zipFileName;
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Cannot create ZIP file');
+        }
+
+        /**
+         * ==========================
+         * CSV → DIRECT STRING
+         * ==========================
+         */
+        $csvData = [];
+        $csvData[] = [
+            'Area','Region','Branch','Campaign Usecase','Campaign Type',
+            'Message Body','Shortmax User Type',
+            'Periode Start','Periode End',
+            'Jumlah Blast','Nama Campaign'
+        ];
+
+        $csvData[] = [
+            $campaign->area,
+            $campaign->region,
+            $campaign->branch,
+            $campaign->campaign_usecase,
+            $campaign->campaign_type,
+            strip_tags($campaign->message_body),
+            $campaign->shortmax_user_type,
+            $campaign->periode_campaign_start,
+            $campaign->periode_campaign_end,
+            $campaign->jumlah_blast,
+            $campaign->nama_campaign,
+        ];
+
+        $csvString = '';
+        foreach ($csvData as $row) {
+            $csvString .= '"' . implode('","', $row) . '"' . "\n";
+        }
+
+        $zip->addFromString('campaign_data.csv', $csvString);
+
+        /**
+         * ==========================
+         * ADD ATTACHMENTS (SAFE)
+         * ==========================
+         */
+        $attachments = [
+            'KV_Image' => $campaign->kv_message_link
+                ? 'campaign/kv-message/'.$campaign->kv_message_link
+                : null,
+
+            'Whitelist' => $campaign->nama_file_whitelist
+                ? 'campaign/whitelist/'.$campaign->nama_file_whitelist
+                : null,
+
+            'CC' => $campaign->cc
+                ? 'campaign/cc/'.$campaign->cc
+                : null,
+        ];
+
+        foreach ($attachments as $folder => $relativePath) {
+
+            if (!$relativePath) {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($relativePath)) {
+                $zip->addFile(
+                    storage_path('app/public/'.$relativePath),
+                    $folder.'/'.basename($relativePath)
+                );
+            }
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
 }

@@ -103,9 +103,9 @@
                 <label>Campaign Type</label>
                 <select name="campaign_type" id="campaign_type" class="form-control select2">
                     <option value="">-- Pilih --</option>
-                    <option value="Whitelist"
-                        {{ old('campaign_type', $campaign->campaign_type) == 'Whitelist' ? 'selected' : '' }}>
-                        Whitelist
+                    <option value="Broadcast"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'Broadcast' ? 'selected' : '' }}>
+                        Broadcast
                     </option>
                     <option value="LBA"
                         {{ old('campaign_type', $campaign->campaign_type) == 'LBA' ? 'selected' : '' }}>
@@ -232,11 +232,11 @@
 
 <script>
 $(document).ready(function () {
-
+    
     function toggleCampaignType() {
         let type = $('#campaign_type').val();
 
-        if (type === 'Whitelist') {
+        if (type === 'Broadcast') {
 
             // Enable whitelist
             $('#file_whitelist').prop('disabled', false);

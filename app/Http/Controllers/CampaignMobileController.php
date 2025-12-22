@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CampaignMobile;
 use Yajra\DataTables\Facades\DataTables;
+use ZipArchive;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 class CampaignMobileController extends Controller
 {
@@ -29,10 +32,12 @@ class CampaignMobileController extends Controller
             ->addColumn('aksi', function($row){
                 $editUrl = route('campaign-mobile.edit', $row->id);
                 $showUrl = route('campaign-mobile.show', $row->id);
+                $downloadUrl = route('campaign-mobile.download', $row->id);
 
                 return '
                     <a href="'.$showUrl.'" class="btn btn-info btn-sm">Lihat</a>
                     <a href="'.$editUrl.'" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     <button onclick="deleteCampaign('.$row->id.')" class="btn btn-danger btn-sm">Hapus</button>
                 ';
             })
@@ -248,5 +253,107 @@ class CampaignMobileController extends Controller
             'status' => true,
             'message' => 'Campaign berhasil dihapus'
         ]);
+    }
+
+    public function download($id)
+    {
+        $campaign = CampaignMobile::findOrFail($id);
+
+        // Authorization
+        if (auth()->user()->role !== 'Admin' && $campaign->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Temp zip path
+        $tempPath = storage_path('app/public/temp');
+        if (!is_dir($tempPath)) {
+            mkdir($tempPath, 0755, true);
+        }
+
+        $zipFileName = 'campaign_'.$campaign->id.'.zip';
+        $zipPath = $tempPath.'/'.$zipFileName;
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Cannot create ZIP file');
+        }
+
+        /**
+         * ==========================
+         * CSV DATA
+         * ==========================
+         */
+        $csvHeader = [
+            'Nama',
+            'Area',
+            'Region',
+            'Branch',
+            'Campaign Usecase',
+            'Message Body',
+            'User Type',
+            'Periode Start',
+            'Periode End',
+            'Jumlah Blast',
+            'Nama Campaign'
+        ];
+
+        $csvRow = [
+            optional($campaign->user)->name,
+            $campaign->area,
+            $campaign->region,
+            $campaign->branch,
+            $campaign->campaign_usecase,
+            strip_tags($campaign->message_body),
+            $campaign->shortmax_user_type,
+            $campaign->periode_campaign_start,
+            $campaign->periode_campaign_end,
+            $campaign->jumlah_blast,
+            $campaign->nama_campaign,
+        ];
+
+        $csvString  = '"' . implode('","', $csvHeader) . '"' . "\n";
+        $csvString .= '"' . implode('","', $csvRow) . '"' . "\n";
+
+        $zip->addFromString('campaign_data.csv', $csvString);
+
+        /**
+         * ==========================
+         * ATTACHMENTS
+         * ==========================
+         */
+        $attachments = [
+            'KV_Image' => $campaign->kv_message_link
+                ? 'campaign/kv-message/'.$campaign->kv_message_link
+                : null,
+
+            'Whitelist' => $campaign->nama_file_whitelist
+                ? 'campaign/whitelist/'.$campaign->nama_file_whitelist
+                : null,
+
+            'CC' => $campaign->cc
+                ? 'campaign/cc/'.$campaign->cc
+                : null,
+        ];
+
+        foreach ($attachments as $folder => $relativePath) {
+
+            if (!$relativePath) {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($relativePath)) {
+                $zip->addFile(
+                    storage_path('app/public/'.$relativePath),
+                    $folder.'/'.basename($relativePath)
+                );
+            }
+        }
+
+        $zip->close();
+
+        return response()
+            ->download($zipPath)
+            ->deleteFileAfterSend(true);
     }
 }
