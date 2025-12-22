@@ -89,7 +89,7 @@
                 <label>KV (Key-Visual) Message</label>
                 <input type="file" id="kv_message_link" name="kv_message_link" class="form-control" accept="image/*" onchange="previewKV(this)">
                 <small class="text-muted">Preview:</small><br>
-                <img id="kvPreview" src="{{ $campaign->kv_message_link ? asset('storage/'.$campaign->kv_message_link) : '#' }}" alt="KV Preview">
+                <img id="kvPreview" src="{{ $campaign->kv_message_link ? asset('storage/campaign/kv-message/'.$campaign->kv_message_link) : '#' }}" alt="KV Preview">
                 @error('kv_message_link') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
             {{-- SHORTMAX USER TYPE --}}

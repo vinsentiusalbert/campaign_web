@@ -78,7 +78,7 @@
             <label>KV (Key-Visual) Message</label>
             <div class="detail-box">
                 @if($campaign->kv_message_link)
-                    <img src="{{ asset('storage/'.$campaign->kv_message_link) }}" alt="KV Image" class="kv-preview">
+                    <img src="{{ asset('storage/campaign/kv-message/'.$campaign->kv_message_link) }}" alt="KV Image" class="kv-preview">
                 @else
                     -
                 @endif

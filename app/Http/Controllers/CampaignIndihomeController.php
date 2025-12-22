@@ -36,14 +36,24 @@ class CampaignIndihomeController extends Controller
             ->addColumn('aksi', function ($row) {
                 $edit = route('campaign-indihome.edit', $row->id);
                 $show = route('campaign-indihome.show', $row->id);
-                $downloadUrl = route('campaign-indihome.download', $row->id);
 
-                return '
+                $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
                     <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
-                    <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
+                ';
+
+                if (Auth::user()->role === 'admin') {
+                    $downloadUrl = route('campaign-indihome.download', $row->id);
+                    $buttons .= '
+                        <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
+                    ';
+                }
+
+                $buttons .= '
                     <button onclick="deleteCampaign('.$row->id.')" class="btn btn-danger btn-sm">Hapus</button>
                 ';
+
+                return $buttons;
             })
             ->editColumn('periode_campaign_start', function ($row) {
                 return $row->periode_campaign_start
@@ -352,10 +362,20 @@ class CampaignIndihomeController extends Controller
          */
         $csvData = [];
         $csvData[] = [
-            'Area','Region','Branch','Campaign Usecase','Campaign Type',
-            'Message Body','Shortmax User Type',
+            'Area','Region','Branch','Campaign Usecase', 'Message Body','Campaign Type',
+            'Message Body','User Type',
             'Periode Start','Periode End',
-            'Jumlah Blast','Nama Campaign'
+            'Jumlah Blast','Nama Campaign',
+            'carousel_product_1',
+            'kv_product_1',
+            'carousel_product_2',
+            'kv_product_2',
+            'carousel_product_3',
+            'kv_product_3',
+            'carousel_product_4',
+            'kv_product_4',
+            'carousel_product_5',
+            'kv_product_5',
         ];
 
         $csvData[] = [
@@ -363,13 +383,15 @@ class CampaignIndihomeController extends Controller
             $campaign->region,
             $campaign->branch,
             $campaign->campaign_usecase,
+            $campaign->message_body,
             $campaign->campaign_type,
             strip_tags($campaign->message_body),
             $campaign->shortmax_user_type,
             $campaign->periode_campaign_start,
             $campaign->periode_campaign_end,
             $campaign->jumlah_blast,
-            $campaign->nama_campaign,
+            $campaign->nama_template,
+            $campaign
         ];
 
         $csvString = '';

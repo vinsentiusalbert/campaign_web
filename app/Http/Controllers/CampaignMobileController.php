@@ -8,6 +8,7 @@ use Yajra\DataTables\Facades\DataTables;
 use ZipArchive;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Auth;
 
 
 class CampaignMobileController extends Controller
@@ -29,17 +30,27 @@ class CampaignMobileController extends Controller
         }
 
         return DataTables::of($query)
-            ->addColumn('aksi', function($row){
-                $editUrl = route('campaign-mobile.edit', $row->id);
-                $showUrl = route('campaign-mobile.show', $row->id);
-                $downloadUrl = route('campaign-mobile.download', $row->id);
+            ->addColumn('aksi', function ($row) {
+                $edit = route('campaign-mobile.edit', $row->id);
+                $show = route('campaign-mobile.show', $row->id);
 
-                return '
-                    <a href="'.$showUrl.'" class="btn btn-info btn-sm">Lihat</a>
-                    <a href="'.$editUrl.'" class="btn btn-warning btn-sm">Edit</a>
-                    <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
+                $buttons = '
+                    <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
+                    <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
+                ';
+
+                if (Auth::user()->role === 'Admin') {
+                    $downloadUrl = route('campaign-mobile.download', $row->id);
+                    $buttons .= '
+                        <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
+                    ';
+                }
+
+                $buttons .= '
                     <button onclick="deleteCampaign('.$row->id.')" class="btn btn-danger btn-sm">Hapus</button>
                 ';
+
+                return $buttons;
             })
             ->rawColumns(['aksi'])
             ->make(true);
@@ -285,7 +296,6 @@ class CampaignMobileController extends Controller
          * ==========================
          */
         $csvHeader = [
-            'Nama',
             'Area',
             'Region',
             'Branch',
@@ -299,7 +309,6 @@ class CampaignMobileController extends Controller
         ];
 
         $csvRow = [
-            optional($campaign->user)->name,
             $campaign->area,
             $campaign->region,
             $campaign->branch,
