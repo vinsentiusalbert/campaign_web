@@ -42,7 +42,7 @@ class CampaignIndihomeController extends Controller
                     <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
                 ';
 
-                if (Auth::user()->role === 'admin') {
+                if (Auth::user()->role === 'Admin') {
                     $downloadUrl = route('campaign-indihome.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>

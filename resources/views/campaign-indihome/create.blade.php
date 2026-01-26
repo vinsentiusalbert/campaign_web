@@ -59,13 +59,21 @@
             {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
-                <input type="text" name="area" class="form-control" value="{{ old('area') }}">
+                <select name="area" id="area" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="AREA 1" {{ old('area') == 'AREA 1' ? 'selected' : '' }}>AREA 1</option>
+                    <option value="AREA 2" {{ old('area') == 'AREA 2' ? 'selected' : '' }}>AREA 2</option>
+                    <option value="AREA 3" {{ old('area') == 'AREA 3' ? 'selected' : '' }}>AREA 3</option>
+                    <option value="AREA 4" {{ old('area') == 'AREA 4' ? 'selected' : '' }}>AREA 4</option>
+                </select>
             </div>
 
             {{-- REGION --}}
             <div class="form-group">
                 <label>Region</label>
-                <input type="text" name="region" class="form-control" value="{{ old('region') }}">
+                <select name="region" id="region" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                </select>
             </div>
 
             {{-- BRANCH --}}
@@ -235,7 +243,38 @@
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
 <script>
+    // Mapping area ke region
+    const areaRegionMap = {
+        'AREA 1': ['SUMBAGSEL', 'SUMBAGTENG', 'SUMBAGUT'],
+        'AREA 2': ['JABODETABEK', 'JABAR'],
+        'AREA 3': ['JATENG DIY', 'JATIM', 'BALI NUSRA'],
+        'AREA 4': ['KALIMANTAN', 'SULAWESI', 'Papua Maluku']
+    };
+
     $(document).ready(function () {
+
+    // Handle area change
+    $('#area').on('change', function () {
+        const selectedArea = $(this).val();
+        const regionSelect = $('#region');
+        const oldRegion = "{{ old('region') }}";
+
+        regionSelect.empty().append('<option value="">-- Pilih --</option>');
+
+        if (selectedArea && areaRegionMap[selectedArea]) {
+            areaRegionMap[selectedArea].forEach(function (region) {
+                const selected = oldRegion === region ? 'selected' : '';
+                regionSelect.append(`<option value="${region}" ${selected}>${region}</option>`);
+            });
+        }
+
+        regionSelect.trigger('change.select2');
+    });
+
+    // Trigger area change on page load if area was previously selected
+    if ($('#area').val()) {
+        $('#area').trigger('change');
+    }
 
     function toggleCampaignType() {
         let type = $('#campaign_type').val();
