@@ -10,7 +10,7 @@ use App\Http\Controllers\CampaignIndihomeController;
 
 Route::get('/', [FrontController::class, 'index'])->name('home');
 Route::get('/login', [FrontController::class, 'index'])->name('login');
-Route::post('/login', [BackController::class, 'login'])->name('login');
+Route::post('/login', [BackController::class, 'login'])->name('login.post');
 Route::get('/register', [FrontController::class, 'register'])->name('register');
 Route::post('/register-simpan', [BackController::class, 'registerStore'])->name('register.store');
 
