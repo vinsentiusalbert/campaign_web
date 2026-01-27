@@ -60,7 +60,7 @@
                 @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-header">System Management</li>
                 @endif
-                @if($isAdmin)
+                @if($isSuper)
                 <li class="nav-item">
                     <a href="{{ route('users.page') }}"
                         class="nav-link waves-effect {{ request()->routeIs('users.page') ? 'active' : '' }}">
