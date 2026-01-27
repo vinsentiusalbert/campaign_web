@@ -24,5 +24,6 @@ class CampaignMobile extends Model
         'jumlah_blast',
         'cc',
         'nama_campaign',
+        'status'
     ];
 }

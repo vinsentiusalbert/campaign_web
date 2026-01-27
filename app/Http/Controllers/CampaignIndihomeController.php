@@ -28,11 +28,17 @@ class CampaignIndihomeController extends Controller
         $query = CampaignIndihome::query();
 
         // Jika bukan admin, hanya lihat data sendiri
-        if (auth()->user()->role !== 'Admin' || auth()->user()->role === 'Super') {
+        if (auth()->user()->role !== 'Admin' || auth()->user()->role !== 'Super') {
             $query->where('user_id', auth()->id());
         }
 
         return DataTables::of($query)
+            ->addColumn('status', function ($row) {
+                if ($row->status == 1) {
+                    return '<span class="badge badge-success">Active</span>';
+                }
+                return '<span class="badge badge-secondary">Not Active</span>';
+            })
             ->addColumn('aksi', function ($row) {
                 $edit = route('campaign-indihome.edit', $row->id);
                 $show = route('campaign-indihome.show', $row->id);
@@ -41,7 +47,19 @@ class CampaignIndihomeController extends Controller
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
                     <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
                 ';
-
+                // tombol activate
+                if (
+                    in_array(Auth::user()->role, ['Admin', 'Super']) &&
+                    $row->status == 0
+                ) {
+                    $activateUrl = route('campaign-indihome.activate', $row->id);
+                    $buttons .= '
+                        <button onclick="activateCampaign('.$row->id.')" 
+                                class="btn btn-primary btn-sm">
+                            Activate
+                        </button>
+                    ';
+                }
                 if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
                     $downloadUrl = route('campaign-indihome.download', $row->id);
                     $buttons .= '
@@ -65,7 +83,7 @@ class CampaignIndihomeController extends Controller
                     ? date('d-m-Y H:i', strtotime($row->periode_campaign_end))
                     : '-';
             })
-            ->rawColumns(['aksi'])
+            ->rawColumns(['aksi', 'status'])
             ->make(true);
     }
     /**
@@ -437,6 +455,25 @@ class CampaignIndihomeController extends Controller
         $zip->close();
 
         return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
+
+    public function activate($id)
+    {
+        $campaign = CampaignIndihome::findOrFail($id);
+
+        // hanya Admin & Super
+        if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
+            abort(403);
+        }
+
+        $campaign->status = 1;
+        $campaign->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Campaign berhasil diaktifkan'
+        ]);
     }
 
 }

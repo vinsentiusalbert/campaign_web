@@ -7,42 +7,20 @@
 
 <style>
     #loading-overlay {
-        position: fixed;
-        top: 0; left: 0;
+        position: fixed; top: 0; left: 0;
         width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6);
-        z-index: 9999;
-        display: none;
-        justify-content: center;
-        align-items: center;
+        background: rgba(0,0,0,0.7); z-index: 9999;
+        display: none; justify-content: center; align-items: center;
     }
+    #loading-message { font-size: 24px; color: white; text-align: center; }
 
-    #loading-message {
-        font-size: 24px;
-        color: #fff;
-    }
+    .table { background-color: #f9f9f9; border-radius: 8px; overflow: hidden; width: 100%; margin-top: 15px; border: 1px solid #ccc; table-layout: auto; }
+    .table th, .table td { padding: 8px !important; font-size: 14px !important; border: 0.5px solid #ccc; color: #313131; text-align: center; vertical-align: middle; white-space: nowrap; }
+    .table th { font-weight: bold; background-color: #343a40; color: #fff; }
 
-    .table {
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid #dee2e6;
-        font-size: 14px;
-    }
-
-    .table th {
-        background-color: #343a40;
-        color: #fff;
-        text-align: center;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-
-    .table td {
-        text-align: center;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
+    .btn-group-sm > .btn, .btn-sm { margin: 0 2px; }
+    .badge-ok { background-color: #28a745; color: #fff; }
+    .badge-no { background-color: #6c757d; color: #fff; }
 </style>
 @endsection
 
@@ -79,6 +57,7 @@
                         <th>Jumlah Blast</th>
                         {{-- <th>Radius</th> --}}
                         <th>Whitelist File</th>
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -121,6 +100,7 @@ $(document).ready(function () {
             { data: 'jumlah_blast', name: 'jumlah_blast' },
             // { data: 'radius', name: 'radius' },
             { data: 'nama_file_whitelist', name: 'nama_file_whitelist' },
+            { data: 'status', name: 'status' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
         ],
         columnDefs: [
@@ -155,5 +135,31 @@ $(document).ready(function () {
         });
     };
 });
+
+function activateCampaign(id) {
+    Swal.fire({
+        title: 'Activate campaign?',
+        text: 'Campaign ini akan diaktifkan',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, activate'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post(
+                `/campaign-indihome/${id}/activate`,
+                {_token: '{{ csrf_token() }}'},
+                function (res) {
+                    Swal.fire('Berhasil!', res.message, 'success');
+                    $('#campaignIndihomeTable').DataTable().ajax.reload(null, false);
+                }
+            ).fail(function () {
+                Swal.fire('Error!', 'Gagal activate campaign', 'error');
+            });
+        }
+    });
+}
 </script>
+
 @endsection

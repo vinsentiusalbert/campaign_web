@@ -40,6 +40,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,User'])->group(function () {
         Route::get('/{id}', [CampaignMobileController::class, 'show'])->name('show');
         Route::delete('/{id}', [CampaignMobileController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignMobileController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignMobileController::class, 'activate'])->name('activate');
     });
     Route::prefix('campaign-indihome')->name('campaign-indihome.')->middleware('auth')->group(function () {
         Route::get('/', [CampaignIndihomeController::class, 'index'])->name('index');
@@ -51,6 +52,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,User'])->group(function () {
         Route::get('/{id}', [CampaignIndihomeController::class, 'show'])->name('show');
         Route::delete('/{id}', [CampaignIndihomeController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignIndihomeController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignIndihomeController::class, 'activate'])->name('activate');
     });
 });
 

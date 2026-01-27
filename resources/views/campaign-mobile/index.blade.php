@@ -12,7 +12,7 @@
     }
     #loading-message { font-size: 24px; color: white; text-align: center; }
 
-    .table { background-color: #f9f9f9; border-radius: 8px; overflow: hidden; width: 100%; margin-top: 15px; border: 0.5px solid #ccc; table-layout: auto; }
+    .table { background-color: #f9f9f9; border-radius: 8px; overflow: hidden; width: 100%; margin-top: 15px; border: 1px solid #ccc; table-layout: auto; }
     .table th, .table td { padding: 8px !important; font-size: 14px !important; border: 0.5px solid #ccc; color: #313131; text-align: center; vertical-align: middle; white-space: nowrap; }
     .table th { font-weight: bold; background-color: #343a40; color: #fff; }
 
@@ -58,6 +58,7 @@
                         <th>Nama Campaign</th>
                         {{-- <th>Created At</th>
                         <th>Updated At</th> --}}
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -95,6 +96,7 @@ $(document).ready(function() {
             { data: 'nama_campaign', name: 'nama_campaign' },
             // { data: 'created_at', name: 'created_at' },
             // { data: 'updated_at', name: 'updated_at' },
+            { data: 'status', name: 'status' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
         ],
         columnDefs: [{ targets: '_all', className: 'text-center' }]
@@ -124,5 +126,30 @@ $(document).ready(function() {
         });
     }
 });
+
+function activateCampaign(id) {
+    Swal.fire({
+        title: 'Activate campaign?',
+        text: 'Campaign ini akan diaktifkan',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, activate'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post(
+                `/campaign-mobile/${id}/activate`,
+                {_token: '{{ csrf_token() }}'},
+                function (res) {
+                    Swal.fire('Berhasil!', res.message, 'success');
+                    $('#campaignMobileTable').DataTable().ajax.reload(null, false);
+                }
+            ).fail(function () {
+                Swal.fire('Error!', 'Gagal activate campaign', 'error');
+            });
+        }
+    });
+}
 </script>
 @endsection
