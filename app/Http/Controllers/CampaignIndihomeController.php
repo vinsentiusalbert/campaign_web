@@ -28,7 +28,7 @@ class CampaignIndihomeController extends Controller
         $query = CampaignIndihome::query();
 
         // Jika bukan admin, hanya lihat data sendiri
-        if (auth()->user()->role !== 'Admin') {
+        if (auth()->user()->role !== 'Admin' || auth()->user()->role === 'Super') {
             $query->where('user_id', auth()->id());
         }
 
@@ -42,7 +42,7 @@ class CampaignIndihomeController extends Controller
                     <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
                 ';
 
-                if (Auth::user()->role === 'Admin') {
+                if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
                     $downloadUrl = route('campaign-indihome.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
@@ -341,7 +341,7 @@ class CampaignIndihomeController extends Controller
     {
         $campaign = CampaignIndihome::findOrFail($id);
 
-        if (auth()->user()->role !== 'Admin' && $campaign->user_id !== auth()->id()) {
+        if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
             abort(403);
         }
 

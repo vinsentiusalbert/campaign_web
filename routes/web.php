@@ -25,7 +25,7 @@ Route::get('/users-edit/{id}', [UserController::class, 'editUser'])->name('users
 Route::post('/users-update/{id}', [UserController::class, 'updateUser'])->name('users.update');
 Route::post('/users-delete/{id}', [UserController::class, 'deleteUser'])->name('users.delete');
 
-Route::middleware(['auth', 'checkrole:Admin,User'])->group(function () {
+Route::middleware(['auth', 'checkrole:Super,Admin,User'])->group(function () {
     Route::get('/admin/home', function () {
         return redirect()->route('campaign-mobile.index');
     })->name('admin.home');

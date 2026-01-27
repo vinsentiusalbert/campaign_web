@@ -197,6 +197,7 @@
                         <label for="role">Role <span class="text-danger">*</span></label>
                         <select class="form-control" id="role" name="role" required>
                             <option value="">Pilih Role</option>
+                            <option value="Super">Super</option>
                             <option value="Admin">Admin</option>
                             <option value="User">User</option>
                         </select>
@@ -290,7 +291,7 @@
                             badgeClass = 'badge-danger';
                         } else if (data === 'User') {
                             badgeClass = 'badge-success';
-                        } else if (data === 'Treg') {
+                        } else if (data === 'Super') {
                             badgeClass = 'badge-info';
                         } else if (data === 'Canvasser') {
                             badgeClass = 'badge-secondary';

@@ -17,6 +17,12 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
+                'name' => 'Super Admin',
+                'nohp' => '08123456789',
+                'email' => 'super_admin@telkomsel.co.id',
+                'role' => 'Super',
+            ],
+            [
                 'name' => 'Admin Utama',
                 'nohp' => '08123456789',
                 'email' => 'admin@telkomsel.co.id',

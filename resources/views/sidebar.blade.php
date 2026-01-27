@@ -12,6 +12,7 @@
                 <span class="badge badge-danger">{{ Str::limit(Auth::user()->name, 25) }}</span><br>
                 @php
                 $user = Auth::user();
+                $isSuper = $user->role === 'Super';
                 $isAdmin = $user->role === 'Admin';
                 $isTsel = $user->role === 'Tsel';
                 $isTreg = $user->role === 'Treg';
@@ -56,7 +57,7 @@
                     </a>
                 </li>
 
-                @if($isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-header">System Management</li>
                 @endif
                 @if($isAdmin)
@@ -68,7 +69,7 @@
                     </a>
                 </li>
                 @endif
-                @if($isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-item">
                     <a href="{{ url('change-password') }}"
                         class="nav-link waves-effect {{ request()->routeIs('change-password') ? 'active' : '' }}">
@@ -81,7 +82,7 @@
 
 
                 {{-- ===== Logout untuk semua role yang ditangani di atas ===== --}}
-                @if($isAdmin || $isTreg || $isTsel || $isCanv || $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv || $isUser)
                 <li class="nav-header">LOGOUT</li>
                 <li class="nav-item">
                     <a href="{{ url('logout') }}"
