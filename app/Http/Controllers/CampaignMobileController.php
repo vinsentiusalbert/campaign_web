@@ -25,7 +25,7 @@ class CampaignMobileController extends Controller
     public function data(Request $request)
     {
         $query = CampaignMobile::query();
-        if (auth()->user()->role !== 'Admin' || auth()->user()->role !== 'Super') {
+        if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('user_id', auth()->id());
         }
 
@@ -58,7 +58,7 @@ class CampaignMobileController extends Controller
                     ';
                 }
 
-                if (Auth::user()->role === 'Admin' || auth()->user()->role === 'Super') {
+                if (Auth::user()->role === 'Admin' && auth()->user()->role === 'Super') {
                     $downloadUrl = route('campaign-mobile.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>

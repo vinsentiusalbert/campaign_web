@@ -28,7 +28,7 @@ class CampaignIndihomeController extends Controller
         $query = CampaignIndihome::query();
 
         // Jika bukan admin, hanya lihat data sendiri
-        if (auth()->user()->role !== 'Admin' || auth()->user()->role !== 'Super') {
+        if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('user_id', auth()->id());
         }
 
@@ -60,7 +60,7 @@ class CampaignIndihomeController extends Controller
                         </button>
                     ';
                 }
-                if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
+                if (Auth::user()->role === 'Admin' && Auth::user()->role === 'Super') {
                     $downloadUrl = route('campaign-indihome.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
