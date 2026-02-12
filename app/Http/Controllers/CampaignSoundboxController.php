@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CampaignIndihome;
+use App\Models\CampaignSoundbox;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
@@ -13,25 +13,25 @@ use Illuminate\Support\Facades\File;
 
 
 
-class CampaignIndihomeController extends Controller
+class CampaignSoundboxController extends Controller
 {
-    private function ensureCampaignAccess(CampaignIndihome $campaign): void
+    private function ensureCampaignAccess(CampaignSoundbox $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
             abort(403);
         }
     }
     /**
-     * Tampilkan semua campaign Indihome.
+     * Tampilkan semua Campaign Soundbox.
      */
     public function index()
     {
-        $campaigns = CampaignIndihome::orderBy('created_at', 'desc')->paginate(10);
-        return view('campaign-indihome.index', compact('campaigns'));
+        $campaigns = CampaignSoundbox::orderBy('created_at', 'desc')->paginate(10);
+        return view('campaign-soundbox.index', compact('campaigns'));
     }
     public function data(Request $request)
     {
-        $query = CampaignIndihome::query();
+        $query = CampaignSoundbox::query();
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
@@ -46,8 +46,8 @@ class CampaignIndihomeController extends Controller
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $edit = route('campaign-indihome.edit', $row->id);
-                $show = route('campaign-indihome.show', $row->id);
+                $edit = route('campaign-soundbox.edit', $row->id);
+                $show = route('campaign-soundbox.show', $row->id);
 
                 $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
@@ -58,7 +58,7 @@ class CampaignIndihomeController extends Controller
                     in_array(Auth::user()->role, ['Admin', 'Super']) &&
                     $row->status == 0
                 ) {
-                    $activateUrl = route('campaign-indihome.activate', $row->id);
+                    $activateUrl = route('campaign-soundbox.activate', $row->id);
                     $buttons .= '
                         <button onclick="activateCampaign('.$row->id.')" 
                                 class="btn btn-primary btn-sm">
@@ -67,7 +67,7 @@ class CampaignIndihomeController extends Controller
                     ';
                 }
                 if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
-                    $downloadUrl = route('campaign-indihome.download', $row->id);
+                    $downloadUrl = route('campaign-soundbox.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     ';
@@ -93,15 +93,15 @@ class CampaignIndihomeController extends Controller
             ->make(true);
     }
     /**
-     * Tampilkan form create campaign Indihome.
+     * Tampilkan form create Campaign Soundbox.
      */
     public function create()
     {
-        return view('campaign-indihome.create');
+        return view('campaign-soundbox.create');
     }
 
     /**
-     * Simpan campaign Indihome baru.
+     * Simpan Campaign Soundbox baru.
      */
     public function store(Request $request)
     {
@@ -112,7 +112,7 @@ class CampaignIndihomeController extends Controller
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
 
-            'campaign_usecase' => 'nullable|string|max:255',
+            'campaign_usecase' => 'nullable|string|in:Rental,Beli Putus',
             'message_body' => 'nullable|string',
 
             // Image
@@ -154,7 +154,7 @@ class CampaignIndihomeController extends Controller
 
             $image = $request->file('kv_message_image');
 
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imageName = time() . '_Soundbox_' . $image->getClientOriginalName();
 
             $image->storeAs('campaign/kv-message', $imageName, 'public');
 
@@ -167,7 +167,7 @@ class CampaignIndihomeController extends Controller
 
             $file = $request->file('file_whitelist');
 
-            $fileName = time() . '_' . $file->getClientOriginalName();
+            $fileName = time() . '_Soundbox_' . $file->getClientOriginalName();
 
             $file->storeAs('campaign/whitelist', $fileName, 'public');
 
@@ -179,7 +179,7 @@ class CampaignIndihomeController extends Controller
         // =========================
         if ($request->hasFile('cc')) {
             $ccFile = $request->file('cc');
-            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+            $ccFileName = time() . '_Soundbox_' . $ccFile->getClientOriginalName();
 
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
@@ -188,11 +188,11 @@ class CampaignIndihomeController extends Controller
         | SAVE DATA
         =============================== */
 
-        CampaignIndihome::create($validated);
+        CampaignSoundbox::create($validated);
 
         return redirect()
-            ->route('campaign-indihome.index')
-            ->with('success', 'Campaign Indihome berhasil dibuat');
+            ->route('campaign-soundbox.index')
+            ->with('success', 'Campaign Soundbox berhasil dibuat');
     }
 
 
@@ -201,34 +201,34 @@ class CampaignIndihomeController extends Controller
      */
     public function show(string $id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignSoundbox::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
-        return view('campaign-indihome.show', compact('campaign'));
+        return view('campaign-soundbox.show', compact('campaign'));
     }
 
     /**
-     * Tampilkan form edit campaign Indihome.
+     * Tampilkan form edit Campaign Soundbox.
      */
     public function edit($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignSoundbox::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-indihome.edit', compact('campaign'));
+        return view('campaign-soundbox.edit', compact('campaign'));
     }
 
     /**
-     * Update campaign Indihome.
+     * Update Campaign Soundbox.
      */
-    public function update(Request $request, CampaignIndihome $campaignIndihome)
+    public function update(Request $request, CampaignSoundbox $campaignSoundbox)
     {
-        $this->ensureCampaignAccess($campaignIndihome);
+        $this->ensureCampaignAccess($campaignSoundbox);
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
 
-            'campaign_usecase' => 'nullable|string|max:255',
+            'campaign_usecase' => 'nullable|string|in:Rental,Beli Putus',
             'message_body' => 'nullable|string',
 
             // IMAGE
@@ -265,9 +265,9 @@ class CampaignIndihomeController extends Controller
         if ($validated['campaign_type'] === 'LBA') {
 
             // 🔴 LBA → whitelist harus NULL
-            if ($campaignIndihome->nama_file_whitelist) {
+            if ($campaignSoundbox->nama_file_whitelist) {
                 Storage::disk('public')
-                    ->delete('campaign/whitelist/' . $campaignIndihome->nama_file_whitelist);
+                    ->delete('campaign/whitelist/' . $campaignSoundbox->nama_file_whitelist);
             }
 
             $validated['nama_file_whitelist'] = null;
@@ -284,14 +284,14 @@ class CampaignIndihomeController extends Controller
         if ($request->hasFile('kv_message_image')) {
 
             // delete old image
-            if ($campaignIndihome->kv_message_image) {
+            if ($campaignSoundbox->kv_message_image) {
                 Storage::disk('public')->delete(
-                    'campaign/kv-message/'.$campaignIndihome->kv_message_image
+                    'campaign/kv-message/'.$campaignSoundbox->kv_message_image
                 );
             }
 
             $image = $request->file('kv_message_image');
-            $imageName = time().'_'.$image->getClientOriginalName();
+            $imageName = time().'_Soundbox_'.$image->getClientOriginalName();
 
             $image->storeAs('campaign/kv-message', $imageName, 'public');
 
@@ -305,14 +305,14 @@ class CampaignIndihomeController extends Controller
         if ($request->hasFile('file_whitelist')) {
 
             // delete old file
-            if ($campaignIndihome->file_whitelist) {
+            if ($campaignSoundbox->file_whitelist) {
                 Storage::disk('public')->delete(
-                    'campaign/whitelist/'.$campaignIndihome->file_whitelist
+                    'campaign/whitelist/'.$campaignSoundbox->file_whitelist
                 );
             }
 
             $file = $request->file('file_whitelist');
-            $fileName = time().'_'.$file->getClientOriginalName();
+            $fileName = time().'_Soundbox_'.$file->getClientOriginalName();
 
             $file->storeAs('campaign/whitelist', $fileName, 'public');
 
@@ -325,14 +325,14 @@ class CampaignIndihomeController extends Controller
         // =========================
         if ($request->hasFile('cc')) {
 
-            if ($campaignIndihome->cc) {
+            if ($campaignSoundbox->cc) {
                 Storage::disk('public')->delete(
-                    'campaign/cc/' . $campaignIndihome->cc
+                    'campaign/cc/' . $campaignSoundbox->cc
                 );
             }
 
             $ccFile = $request->file('cc');
-            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+            $ccFileName = time() . '_Soundbox_' . $ccFile->getClientOriginalName();
 
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
@@ -341,33 +341,33 @@ class CampaignIndihomeController extends Controller
         /* ===============================
         | UPDATE DATA
         =============================== */
-        $campaignIndihome->update($validated);
+        $campaignSoundbox->update($validated);
 
         return redirect()
-            ->route('campaign-indihome.index')
-            ->with('success', 'Campaign Indihome berhasil diperbarui!');
+            ->route('campaign-soundbox.index')
+            ->with('success', 'Campaign Soundbox berhasil diperbarui!');
     }
 
 
     /**
-     * Hapus campaign Indihome.
+     * Hapus Campaign Soundbox.
      */
     public function destroy(string $id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignSoundbox::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         // dd($campaign);
         $campaign->delete();
 
         return response()->json([
             'status' => true,
-            'message' => 'Campaign Indihome berhasil dihapus'
+            'message' => 'Campaign Soundbox berhasil dihapus'
         ]);
     }
 
     public function download($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignSoundbox::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
         $tempPath = storage_path('app/public/temp');
@@ -467,7 +467,7 @@ class CampaignIndihomeController extends Controller
 
     public function activate($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignSoundbox::findOrFail($id);
 
         // hanya Admin & Super
         if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
@@ -484,3 +484,5 @@ class CampaignIndihomeController extends Controller
     }
 
 }
+
+

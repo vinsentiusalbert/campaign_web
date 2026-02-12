@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CampaignMobile extends Model
+class CampaignNomorCantik extends Model
 {
     
-    protected $table = 'campaign_mobile';
+    protected $table = 'campaign_nomor_cantik';
 
     protected $fillable = [
         'user_id',
@@ -30,3 +30,4 @@ class CampaignMobile extends Model
         'status'
     ];
 }
+

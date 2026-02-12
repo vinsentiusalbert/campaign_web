@@ -16,7 +16,7 @@ class FrontController extends Controller
     {
         if (Auth::user() or 'sukseslogin' == Session::get('login')) {
             if ('User' == Auth::user()->role) {
-                return redirect('/home');
+                return redirect()->route('campaign-waba-interaktif.index');
             } else if ('TL' == Auth::user()->role) {
                 return redirect('/loglogin');
             } else if ('Treg' == Auth::user()->role) {

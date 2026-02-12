@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\CampaignMobile;
+use App\Models\CampaignNomorCantik;
 use Yajra\DataTables\Facades\DataTables;
 use ZipArchive;
 use Illuminate\Support\Facades\Storage;
@@ -11,9 +11,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 
 
-class CampaignMobileController extends Controller
+class CampaignNomorCantikController extends Controller
 {
-    private function ensureCampaignAccess(CampaignMobile $campaign): void
+    private function ensureCampaignAccess(CampaignNomorCantik $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
             abort(403);
@@ -24,13 +24,13 @@ class CampaignMobileController extends Controller
      */
     public function index()
     {
-        // $query = CampaignMobile::get();
+        // $query = CampaignNomorCantik::get();
         // dd($query);
-        return view('campaign-mobile.index');
+        return view('campaign-nomor-cantik.index');
     }
     public function data(Request $request)
     {
-        $query = CampaignMobile::query();
+        $query = CampaignNomorCantik::query();
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('user_id', auth()->id());
         }
@@ -43,8 +43,8 @@ class CampaignMobileController extends Controller
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $edit = route('campaign-mobile.edit', $row->id);
-                $show = route('campaign-mobile.show', $row->id);
+                $edit = route('campaign-nomor-cantik.edit', $row->id);
+                $show = route('campaign-nomor-cantik.show', $row->id);
 
                 $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
@@ -64,7 +64,7 @@ class CampaignMobileController extends Controller
                 }
 
                 if (Auth::user()->role === 'Admin' || auth()->user()->role === 'Super') {
-                    $downloadUrl = route('campaign-mobile.download', $row->id);
+                    $downloadUrl = route('campaign-nomor-cantik.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     ';
@@ -84,7 +84,7 @@ class CampaignMobileController extends Controller
      */
     public function create()
     {
-        return view('campaign-mobile.create');
+        return view('campaign-nomor-cantik.create');
     }
 
     /**
@@ -97,7 +97,7 @@ class CampaignMobileController extends Controller
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
-            'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
+            'campaign_usecase' => 'nullable|string|in:Sales Activation',
             'message_body' => 'nullable|string',
 
             // KV IMAGE
@@ -169,11 +169,11 @@ class CampaignMobileController extends Controller
         }
 
         // Simpan ke database
-        CampaignMobile::create($validated);
+        CampaignNomorCantik::create($validated);
 
         return redirect()
-            ->route('campaign-mobile.index')
-            ->with('success', 'Campaign mobile berhasil dibuat.');
+            ->route('campaign-nomor-cantik.index')
+            ->with('success', 'Campaign Nomor Cantik berhasil dibuat.');
     }
 
 
@@ -183,9 +183,9 @@ class CampaignMobileController extends Controller
      */
     public function show(string $id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
-        return view('campaign-mobile.show', compact('campaign'));
+        return view('campaign-nomor-cantik.show', compact('campaign'));
     }
 
     /**
@@ -193,15 +193,15 @@ class CampaignMobileController extends Controller
      */
     public function edit($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-mobile.edit', compact('campaign'));
+        return view('campaign-nomor-cantik.edit', compact('campaign'));
     }
 
     public function update(Request $request, $id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
         // Validasi data
@@ -209,7 +209,7 @@ class CampaignMobileController extends Controller
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
-            'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
+            'campaign_usecase' => 'nullable|string|in:Sales Activation',
             'message_body' => 'nullable|string',
 
             // KV IMAGE
@@ -306,7 +306,7 @@ class CampaignMobileController extends Controller
         $campaign->update($validated);
 
         return redirect()
-            ->route('campaign-mobile.index')
+            ->route('campaign-nomor-cantik.index')
             ->with('success', 'Campaign berhasil diperbarui.');
     }
 
@@ -317,7 +317,7 @@ class CampaignMobileController extends Controller
      */
     public function destroy(string $id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
         if ($campaign->kv_message_link) {
@@ -340,7 +340,7 @@ class CampaignMobileController extends Controller
 
     public function download($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
         // Temp zip path
@@ -435,7 +435,7 @@ class CampaignMobileController extends Controller
     }
     public function activate($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignNomorCantik::findOrFail($id);
 
         // hanya Admin & Super
         if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
@@ -451,3 +451,4 @@ class CampaignMobileController extends Controller
         ]);
     }
 }
+

@@ -199,6 +199,7 @@
                             <option value="">Pilih Role</option>
                             <option value="Super">Super</option>
                             <option value="Admin">Admin</option>
+                            <option value="Tsel">Tsel</option>
                             <option value="User">User</option>
                         </select>
                     </div>
@@ -293,6 +294,8 @@
                             badgeClass = 'badge-success';
                         } else if (data === 'Super') {
                             badgeClass = 'badge-info';
+                        } else if (data === 'Tsel') {
+                            badgeClass = 'badge-primary';
                         } else if (data === 'Canvasser') {
                             badgeClass = 'badge-secondary';
                         }

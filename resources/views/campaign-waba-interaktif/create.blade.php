@@ -1,13 +1,15 @@
 @extends('master')
 
-@section('title', 'Create Mobile Campaign')
+@section('title', 'Create Campaign WABA Interaktif')
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+
 <style>
-    .card-title { font-weight: bold; }
     .form-group label { font-weight: 600; }
+    .text-danger { font-size: 13px; }
+
     .select2-container .select2-selection--single {
         height: 35px !important;
         padding: 8px 12px;
@@ -18,25 +20,25 @@
         font-size: 15px;
         background-color: #fff;
     }
-    .text-danger { font-size: 13px; }
-    .periode-container {
+
+    .periode-wrapper {
         display: flex;
-        gap: 20px;
+        gap: 15px;
     }
-    .periode-container > div {
+    .periode-wrapper > div {
         flex: 1;
     }
-    #kvPreview {
-        max-width: 300px;
+
+    /* Image Preview */
+    .image-preview {
         margin-top: 10px;
-        border: 1px solid #ccc;
-        padding: 5px;
-        border-radius: 5px;
         display: none;
     }
-    #whitelistPreview {
-        margin-top: 5px;
-        font-style: italic;
+    .image-preview img {
+        max-width: 250px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        padding: 5px;
     }
 </style>
 @endsection
@@ -44,108 +46,98 @@
 @section('content')
 <div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title">Create Mobile Campaign</h3>
+        <h3 class="card-title">Create Campaign WABA Interaktif</h3>
     </div>
 
     <div class="card-body">
-        <form action="{{ route('campaign-mobile.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('campaign-waba-interaktif.store') }}" 
+              method="POST" 
+              enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
             {{-- AREA --}}
             <div class="form-group">
-                <label for="area">Area</label>
-                <select id="area" name="area" class="form-control select2">
+                <label>Area</label>
+                <select name="area" id="area" class="form-control select2">
                     <option value="">-- Pilih --</option>
                     <option value="AREA 1" {{ old('area') == 'AREA 1' ? 'selected' : '' }}>AREA 1</option>
                     <option value="AREA 2" {{ old('area') == 'AREA 2' ? 'selected' : '' }}>AREA 2</option>
                     <option value="AREA 3" {{ old('area') == 'AREA 3' ? 'selected' : '' }}>AREA 3</option>
                     <option value="AREA 4" {{ old('area') == 'AREA 4' ? 'selected' : '' }}>AREA 4</option>
                 </select>
-                @error('area') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
             {{-- REGION --}}
             <div class="form-group">
-                <label for="region">Region</label>
-                <select id="region" name="region" class="form-control select2">
+                <label>Region</label>
+                <select name="region" id="region" class="form-control select2">
                     <option value="">-- Pilih --</option>
                 </select>
-                @error('region') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
             {{-- BRANCH --}}
             <div class="form-group">
-                <label for="branch">Branch</label>
-                <input type="text" id="branch" name="branch" class="form-control" value="{{ old('branch') }}">
-                @error('branch') <small class="text-danger">{{ $message }}</small> @enderror
+                <label>Branch</label>
+                <input type="text" name="branch" class="form-control" value="{{ old('branch') }}">
             </div>
 
             {{-- CAMPAIGN USECASE --}}
             <div class="form-group">
-                <label for="campaign_usecase">Campaign Usecase</label>
-                <select id="campaign_usecase" name="campaign_usecase" class="form-control select2">
-                    <option value="">-- Pilih Campaign Usecase --</option>
-                    @foreach(['ShortMax', 'Netflix', 'YouTube', 'MyTelkomsel'] as $usecase)
-                        <option value="{{ $usecase }}" {{ old('campaign_usecase') == $usecase ? 'selected' : '' }}>{{ $usecase }}</option>
-                    @endforeach
+                <label>Campaign Usecase</label>
+                <select name="campaign_usecase" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="Sales/Leads" {{ old('campaign_usecase') == 'Sales/Leads' ? 'selected' : '' }}>Sales/Leads</option>
+                    <option value="Retention/Reminder" {{ old('campaign_usecase') == 'Retention/Reminder' ? 'selected' : '' }}>Retention/Reminder</option>
                 </select>
-                @error('campaign_usecase') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 
             {{-- MESSAGE BODY --}}
             <div class="form-group">
-                <label for="message_body">Message Body</label>
-                <textarea id="message_body" name="message_body" class="form-control">{{ old('message_body') }}</textarea>
-                @error('message_body') <small class="text-danger">{{ $message }}</small> @enderror
+                <label>Message Body</label>
+                <textarea name="message_body" id="message_body" class="form-control">{{ old('message_body') }}</textarea>
             </div>
 
-            {{-- KV MESSAGE LINK (Upload Image + Preview) --}}
+            {{-- KV MESSAGE IMAGE --}}
             <div class="form-group">
                 <label>KV (Key-Visual) Message</label>
-                <input type="file" id="kv_message_link" name="kv_message_link" class="form-control" accept="image/*" onchange="previewKV(this)">
-                <small class="text-muted">Preview:</small><br>
-                <img id="kvPreview" src="#" alt="KV Preview">
-                @error('kv_message_link') <small class="text-danger">{{ $message }}</small> @enderror
+                <input type="file" 
+                       name="kv_message_image" 
+                       id="kv_message_image"
+                       class="form-control"
+                       accept="image/*">
+
+                <div class="image-preview" id="kvPreview">
+                    <img id="kvPreviewImg" src="#" alt="Preview Image">
+                </div>
+
+                <small class="text-muted">Format: JPG, JPEG, PNG</small>
             </div>
 
-            {{-- SHORTMAX USER TYPE --}}
-            <div class="form-group">
-                <label for="shortmax_user_type">User Type</label>
-                <select id="shortmax_user_type" name="shortmax_user_type" class="form-control select2">
-                    <option value="">-- Pilih User Type --</option>
-                    @foreach(['Download', 'Belum Download'] as $type)
-                        <option value="{{ $type }}" {{ old('shortmax_user_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
-                    @endforeach
-                </select>
-                @error('shortmax_user_type') <small class="text-danger">{{ $message }}</small> @enderror
-            </div>
-            
             {{-- CAMPAIGN TYPE --}}
             <div class="form-group">
                 <label>Campaign Type</label>
                 <select name="campaign_type" id="campaign_type" class="form-control select2">
                     <option value="">-- Pilih --</option>
-                    <option value="Broadcast" {{ old('campaign_type') == 'Broadcast' ? 'selected' : '' }}>Broadcast</option>
-                    <option value="LBA" {{ old('campaign_type') == 'LBA' ? 'selected' : '' }}>LBA</option>
+                    <option value="Broadcast">Broadcast</option>
+                    <option value="LBA">LBA</option>
                 </select>
                 
                 @error('campaign_type')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
-            
+
             {{-- WHITELIST FILE --}}
             <div class="form-group" id="whitelistWrapper">
                 <label>Upload Whitelist (Excel)</label>
-                <input type="file" 
-                       name="nama_file_whitelist" 
-                        id="file_whitelist"
-                       class="form-control"
-                       accept=".xls,.xlsx">
+                <input type="file"
+                    name="file_whitelist"
+                    id="file_whitelist"
+                    class="form-control"
+                    accept=".xls,.xlsx">
                 <small class="text-muted">Format: XLS, XLSX</small>
-                
-                @error('nama_file_whitelist')
+                @error('file_whitelist')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
@@ -158,7 +150,6 @@
                         name="longitude_latitude"
                         id="longitude_latitude"
                         class="form-control"
-                        value="{{ old('longitude_latitude') }}"
                         placeholder="-6.200000,106.816666">
                     @error('longitude_latitude')
                         <small class="text-danger">{{ $message }}</small>
@@ -170,35 +161,37 @@
                     <input type="text"
                         name="radius"
                         id="radius"
-                        class="form-control"
-                        value="{{ old('radius') }}">
+                        class="form-control">
                     @error('radius')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
                 </div>
             </div>
 
-            {{-- PERIODE CAMPAIGN START & END --}}
-            <div class="periode-container">
+
+            {{-- PERIODE --}}
+            <div class="periode-wrapper">
                 <div class="form-group">
-                    <label for="periode_campaign_start">Periode Campaign Start</label>
-                    <input type="date" id="periode_campaign_start" name="periode_campaign_start" class="form-control" value="{{ old('periode_campaign_start') }}">
-                    @error('periode_campaign_start') <small class="text-danger">{{ $message }}</small> @enderror
+                    <label>Periode Campaign Start</label>
+                    <input type="datetime-local" name="periode_campaign_start" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="periode_campaign_end">Periode Campaign End</label>
-                    <input type="date" id="periode_campaign_end" name="periode_campaign_end" class="form-control" value="{{ old('periode_campaign_end') }}">
-                    @error('periode_campaign_end') <small class="text-danger">{{ $message }}</small> @enderror
+                    <label>Periode Campaign End</label>
+                    <input type="datetime-local" name="periode_campaign_end" class="form-control">
                 </div>
             </div>
 
             {{-- JUMLAH BLAST --}}
             <div class="form-group">
-                <label for="jumlah_blast">Jumlah Blast</label>
-                <input type="number" min="0" id="jumlah_blast" name="jumlah_blast" class="form-control" value="{{ old('jumlah_blast') }}">
-                @error('jumlah_blast') <small class="text-danger">{{ $message }}</small> @enderror
+                <label>Jumlah Blast</label>
+                <input type="number" name="jumlah_blast" class="form-control">
             </div>
 
+            {{-- TEMPLATE --}}
+            <div class="form-group" style="display: none; ">
+                <label>Nama Template</label>
+                <input type="text" name="nama_template" class="form-control">
+            </div>
             {{-- CC FILE --}}
             <div class="form-group">
                 <label>Upload CC (Excel)</label>
@@ -213,18 +206,31 @@
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
+            <hr>
 
-            {{-- NAMA CAMPAIGN --}}
-            <div class="form-group" style="display: none; ">
-                <label for="nama_campaign">Nama Campaign</label>
-                <input type="text" id="nama_campaign" name="nama_campaign" class="form-control" value="{{ old('nama_campaign') }}">
-                @error('nama_campaign') <small class="text-danger">{{ $message }}</small> @enderror
+            {{-- CAROUSEL --}}
+            @for ($i = 1; $i <= 5; $i++)
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Carousel Product {{ $i }}</label>
+                    <textarea name="carousel_product_{{ $i }}" class="form-control"></textarea>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label>KV Product {{ $i }}</label>
+                    <textarea name="kv_product_{{ $i }}" class="form-control"></textarea>
+                </div>
             </div>
+            <hr>
+            @endfor
 
-            {{-- Tombol --}}
             <div class="form-group d-flex gap-2">
-                <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
-                <button type="submit" id="submitBtn" class="btn btn-primary flex-grow-1 m-1">Simpan</button>
+                <a href="{{ route('campaign-waba-interaktif.index') }}" 
+                   class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
+                <button type="submit" class="btn btn-primary flex-grow-1 m-1" 
+                        onclick="this.disabled=true; this.form.submit();">
+                    Simpan
+                </button>
             </div>
         </form>
     </div>
@@ -244,7 +250,7 @@
         'AREA 4': ['KALIMANTAN', 'SULAWESI', 'Papua Maluku']
     };
 
-$(document).ready(function() {
+    $(document).ready(function () {
 
     // Handle area change
     $('#area').on('change', function () {
@@ -269,31 +275,6 @@ $(document).ready(function() {
         $('#area').trigger('change');
     }
 
-    // Select2
-    $('.select2').select2({
-        placeholder: "-- Pilih --",
-        allowClear: true,
-        width: '100%'
-    });
-
-    // Summernote
-    $('#message_body').summernote({
-        height: 300,
-        toolbar: [
-          ['style', ['bold', 'italic', 'underline', 'clear']],
-          ['font', ['strikethrough']],
-          ['para', ['ul', 'ol', 'paragraph']],
-          ['insert', ['link', 'picture']],
-          ['view', ['codeview']]
-        ]
-    });
-
-    // Tombol submit hanya 1 kali
-    $('form').on('submit', function() {
-        $('#submitBtn').attr('disabled', true);
-    });
-
-    
     function toggleCampaignType() {
         let type = $('#campaign_type').val();
 
@@ -331,31 +312,34 @@ $(document).ready(function() {
     });
 
 });
+$(document).ready(function () {
 
-// Preview KV Image
-function previewKV(input) {
-    const preview = document.getElementById('kvPreview');
-    if (input.files && input.files[0]) {
+    $('.select2').select2({ width: '100%' });
+
+    $('#message_body').summernote({
+        height: 250,
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline']],
+            ['para', ['ul', 'ol']],
+            ['insert', ['link']],
+            ['view', ['codeview']]
+        ]
+    });
+
+    // Image Preview
+    $('#kv_message_image').on('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = '#';
-        preview.style.display = 'none';
-    }
-}
+        reader.onload = function (e) {
+            $('#kvPreviewImg').attr('src', e.target.result);
+            $('#kvPreview').show();
+        };
+        reader.readAsDataURL(file);
+    });
 
-// Preview Excel filename
-function previewWhitelist(input) {
-    const preview = document.getElementById('whitelistPreview');
-    if (input.files && input.files[0]) {
-        preview.textContent = 'File terpilih: ' + input.files[0].name;
-    } else {
-        preview.textContent = '';
-    }
-}
+});
 </script>
 @endsection
+
