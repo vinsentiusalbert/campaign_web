@@ -120,12 +120,27 @@
                 </select>
                 @error('shortmax_user_type') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
-
-            {{-- WHITELIST FILE --}}
+            
+            {{-- CAMPAIGN TYPE --}}
             <div class="form-group">
+                <label>Campaign Type</label>
+                <select name="campaign_type" id="campaign_type" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="Broadcast">Broadcast</option>
+                    <option value="LBA">LBA</option>
+                </select>
+                
+                @error('campaign_type')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+            
+            {{-- WHITELIST FILE --}}
+            <div class="form-group" id="whitelistWrapper">
                 <label>Upload Whitelist (Excel)</label>
                 <input type="file" 
                        name="nama_file_whitelist" 
+                        id="file_whitelist"
                        class="form-control"
                        accept=".xls,.xlsx">
                 <small class="text-muted">Format: XLS, XLSX</small>
@@ -133,6 +148,32 @@
                 @error('nama_file_whitelist')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
+            </div>
+
+            {{-- LOKASI --}}
+            <div class="form-row" id="lbaWrapper">
+                <div class="form-group col-md-6">
+                    <label>Longitude, Latitude</label>
+                    <input type="text"
+                        name="longitude_latitude"
+                        id="longitude_latitude"
+                        class="form-control"
+                        placeholder="-6.200000,106.816666">
+                    @error('longitude_latitude')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label>Radius</label>
+                    <input type="text"
+                        name="radius"
+                        id="radius"
+                        class="form-control">
+                    @error('radius')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
             </div>
 
             {{-- PERIODE CAMPAIGN START & END --}}
@@ -249,6 +290,44 @@ $(document).ready(function() {
     $('form').on('submit', function() {
         $('#submitBtn').attr('disabled', true);
     });
+
+    
+    function toggleCampaignType() {
+        let type = $('#campaign_type').val();
+
+        if (type === 'Broadcast') {
+            // Enable whitelist
+            $('#file_whitelist').prop('disabled', false);
+            $('#whitelistWrapper').show();
+
+            // Disable LBA fields & kosongkan
+            $('#longitude_latitude, #radius').val('').prop('disabled', true);
+            $('#lbaWrapper').hide();
+
+        } else if (type === 'LBA') {
+            // Enable LBA fields
+            $('#longitude_latitude, #radius').prop('disabled', false);
+            $('#lbaWrapper').show();
+
+            // Disable whitelist & kosongkan
+            $('#file_whitelist').val('').prop('disabled', true);
+            $('#whitelistWrapper').hide();
+
+        } else {
+            // Jika belum pilih
+            $('#file_whitelist, #longitude_latitude, #radius').val('').prop('disabled', true);
+            $('#whitelistWrapper, #lbaWrapper').hide();
+        }
+    }
+
+    // Initial state
+    toggleCampaignType();
+
+    // On change
+    $('#campaign_type').on('change', function () {
+        toggleCampaignType();
+    });
+
 });
 
 // Preview KV Image

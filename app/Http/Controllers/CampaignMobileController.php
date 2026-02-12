@@ -58,7 +58,7 @@ class CampaignMobileController extends Controller
                     ';
                 }
 
-                if (Auth::user()->role === 'Admin' && auth()->user()->role === 'Super') {
+                if (Auth::user()->role === 'Admin' || auth()->user()->role === 'Super') {
                     $downloadUrl = route('campaign-mobile.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
@@ -100,8 +100,13 @@ class CampaignMobileController extends Controller
 
             'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
 
+            'campaign_type' => 'required|in:Broadcast,LBA',
+
             // WHITELIST FILE
             'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
+            
+            'longitude_latitude' => 'nullable|string|max:255',
+            'radius' => 'nullable|string|max:255',
 
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
@@ -194,8 +199,13 @@ class CampaignMobileController extends Controller
 
             'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
 
+            'campaign_type' => 'required|in:Broadcast,LBA',
+
             // WHITELIST FILE
             'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
+            
+            'longitude_latitude' => 'nullable|string|max:255',
+            'radius' => 'nullable|string|max:255',
 
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',

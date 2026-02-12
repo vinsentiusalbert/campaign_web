@@ -117,8 +117,27 @@
                 @enderror
             </div>
 
-            {{-- Whitelist TYPE --}}
+            {{-- CAMPAIGN TYPE --}}
             <div class="form-group">
+                <label>Campaign Type</label>
+                <select name="campaign_type" id="campaign_type" class="form-control select2">
+                    <option value="">-- Pilih --</option>
+                    <option value="Broadcast"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'Broadcast' ? 'selected' : '' }}>
+                        Broadcast 
+                    </option>
+                    <option value="LBA"
+                        {{ old('campaign_type', $campaign->campaign_type) == 'LBA' ? 'selected' : '' }}>
+                        LBA
+                    </option>
+                </select>
+                @error('campaign_type')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+
+            {{-- Whitelist TYPE --}}
+            <div class="form-group" id="whitelistWrapper">
                 <label>Whitelist File (Excel)</label>
                 <input type="file"
                     name="nama_file_whitelist"
@@ -136,6 +155,28 @@
                     </div>
                 @endif
             </div>  
+
+            {{-- LOCATION (LBA) --}}
+            <div class="form-row" id="lbaWrapper">
+                <div class="form-group col-md-6">
+                    <label>Longitude & Latitude</label>
+                    <input type="text"
+                        name="longitude_latitude"
+                        id="longitude_latitude"
+                        class="form-control"
+                        value="{{ old('longitude_latitude', $campaign->longitude_latitude) }}"
+                        placeholder="-6.200000,106.816666">
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label>Radius</label>
+                    <input type="text"
+                        name="radius"
+                        id="radius"
+                        class="form-control"
+                        value="{{ old('radius', $campaign->radius) }}">
+                </div>
+            </div>
 
             {{-- PERIODE CAMPAIGN START & END --}}
             <div class="periode-container">
@@ -252,6 +293,50 @@ $(document).ready(function() {
     // Tombol submit disable setelah klik
     $('form').on('submit', function() {
         $('#submitBtn').attr('disabled', true);
+    });
+    function toggleCampaignType() {
+        let type = $('#campaign_type').val();
+
+        if (type === 'Broadcast') {
+
+            // Enable whitelist
+            $('#file_whitelist').prop('disabled', false);
+            $('#whitelistWrapper').show();
+
+            // Disable LBA
+            $('#longitude_latitude, #radius')
+                .val('')
+                .prop('disabled', true);
+            $('#lbaWrapper').hide();
+
+        } else if (type === 'LBA') {
+
+            // Enable LBA
+            $('#longitude_latitude, #radius').prop('disabled', false);
+            $('#lbaWrapper').show();
+
+            // Disable whitelist
+            $('#file_whitelist')
+                .val('')
+                .prop('disabled', true);
+            $('#whitelistWrapper').hide();
+
+        } else {
+            // Default (belum pilih)
+            $('#file_whitelist, #longitude_latitude, #radius')
+                .val('')
+                .prop('disabled', true);
+
+            $('#whitelistWrapper, #lbaWrapper').hide();
+        }
+    }
+
+    // Jalankan saat halaman edit dibuka
+    toggleCampaignType();
+
+    // Saat user ganti campaign type
+    $('#campaign_type').on('change', function () {
+        toggleCampaignType();
     });
 });
 

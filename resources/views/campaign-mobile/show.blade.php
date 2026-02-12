@@ -90,6 +90,11 @@
             <div class="detail-label">User Type</div>
             <div class="detail-box">{{ $campaign->shortmax_user_type ?? '-' }}</div>
         </div>
+        {{-- CAMPAIGN TYPE --}}
+        <div class="form-group">
+            <label>Campaign Type</label>
+            <div class="detail-box">{{ $campaign->campaign_type }}</div>
+        </div>
 
         {{-- NAMA FILE WHITELIST --}}
         <div>
@@ -105,6 +110,17 @@
             </div>
         </div>
 
+        {{-- LONG LAT --}}
+        <div class="form-group">
+            <label>Longitude & Latitude</label>
+            <div class="detail-box">{{ $campaign->longitude_latitude ?? '-' }}</div>
+        </div>
+
+        {{-- RADIUS --}}
+        <div class="form-group">
+            <label>Radius</label>
+            <div class="detail-box">{{ $campaign->radius }}</div>
+        </div>
         {{-- PERIODE --}}
         <div class="periode-container" style="display:flex; gap:20px;">
             <div style="flex:1;">
