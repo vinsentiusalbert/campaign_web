@@ -7,6 +7,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CampaignMobileController;
 use App\Http\Controllers\CampaignIndihomeController;
+use App\Http\Controllers\CampaignOrbitController;
+use App\Http\Controllers\CampaignSoundboxController;
+use App\Http\Controllers\CampaignNomorCantikController;
+use App\Http\Controllers\CampaignWabaInteraktifController;
 
 Route::get('/', [FrontController::class, 'index'])->name('home');
 Route::get('/login', [FrontController::class, 'index']);
@@ -25,7 +29,7 @@ Route::get('/users-edit/{id}', [UserController::class, 'editUser'])->name('users
 Route::post('/users-update/{id}', [UserController::class, 'updateUser'])->name('users.update');
 Route::post('/users-delete/{id}', [UserController::class, 'deleteUser'])->name('users.delete');
 
-Route::middleware(['auth', 'checkrole:Super,Admin,User'])->group(function () {
+Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
     Route::get('/admin/home', function () {
         return redirect()->route('campaign-mobile.index');
     })->name('admin.home');
@@ -54,5 +58,62 @@ Route::middleware(['auth', 'checkrole:Super,Admin,User'])->group(function () {
         Route::get('/{id}/download', [CampaignIndihomeController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignIndihomeController::class, 'activate'])->name('activate');
     });
+
+    Route::prefix('campaign-orbit')->name('campaign-orbit.')->middleware('auth')->group(function () {
+        Route::get('/', [CampaignOrbitController::class, 'index'])->name('index');
+        Route::get('/create', [CampaignOrbitController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignOrbitController::class, 'data'])->name('data');
+        Route::post('/store', [CampaignOrbitController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CampaignOrbitController::class, 'edit'])->name('edit');
+        Route::put('/{campaignOrbit}', [CampaignOrbitController::class, 'update'])->name('update');
+        Route::get('/{id}', [CampaignOrbitController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignOrbitController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [CampaignOrbitController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignOrbitController::class, 'activate'])->name('activate');
+    });
+
+    Route::prefix('campaign-soundbox')->name('campaign-soundbox.')->middleware('auth')->group(function () {
+        Route::get('/', [CampaignSoundboxController::class, 'index'])->name('index');
+        Route::get('/create', [CampaignSoundboxController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignSoundboxController::class, 'data'])->name('data');
+        Route::post('/store', [CampaignSoundboxController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CampaignSoundboxController::class, 'edit'])->name('edit');
+        Route::put('/{campaignSoundbox}', [CampaignSoundboxController::class, 'update'])->name('update');
+        Route::get('/{id}', [CampaignSoundboxController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignSoundboxController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [CampaignSoundboxController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignSoundboxController::class, 'activate'])->name('activate');
+    });
+
+    Route::prefix('campaign-nomor-cantik')->name('campaign-nomor-cantik.')->middleware('auth')->group(function () {
+        Route::get('/', [CampaignNomorCantikController::class, 'index'])->name('index');
+        Route::get('/create', [CampaignNomorCantikController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignNomorCantikController::class, 'data'])->name('data');
+        Route::post('/store', [CampaignNomorCantikController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CampaignNomorCantikController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [CampaignNomorCantikController::class, 'update'])->name('update');
+        Route::get('/{id}', [CampaignNomorCantikController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignNomorCantikController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [CampaignNomorCantikController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignNomorCantikController::class, 'activate'])->name('activate');
+    });
 });
 
+Route::middleware(['auth', 'checkrole:User,Admin,Super'])->group(function () {
+    Route::get('/admin/home', function () {
+        return redirect()->route('campaign-waba-interaktif.index');
+    })->name('admin.home.user');
+
+    Route::prefix('campaign-waba-interaktif')->name('campaign-waba-interaktif.')->group(function () {
+        Route::get('/', [CampaignWabaInteraktifController::class, 'index'])->name('index');
+        Route::get('/create', [CampaignWabaInteraktifController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignWabaInteraktifController::class, 'data'])->name('data');
+        Route::post('/store', [CampaignWabaInteraktifController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CampaignWabaInteraktifController::class, 'edit'])->name('edit');
+        Route::put('/{campaignWabaInteraktif}', [CampaignWabaInteraktifController::class, 'update'])->name('update');
+        Route::get('/{id}', [CampaignWabaInteraktifController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignWabaInteraktifController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [CampaignWabaInteraktifController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignWabaInteraktifController::class, 'activate'])->name('activate');
+    });
+});

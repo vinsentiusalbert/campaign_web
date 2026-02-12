@@ -71,6 +71,10 @@ class BackController extends Controller
 
             // 4. Arahkan sesuai role
             switch ($user->role) {
+                case 'User':
+                    return redirect()->route('campaign-waba-interaktif.index');
+                case 'Tsel':
+                case 'Super':
                 case 'Admin':
                 default:
                     return redirect()->route('campaign-mobile.index'); // fallback

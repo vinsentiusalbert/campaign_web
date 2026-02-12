@@ -1,6 +1,6 @@
 @extends('master')
 
-@section('title', 'Detail Mobile Campaign')
+@section('title', 'Detail Nomor Cantik Campaign')
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -38,7 +38,7 @@
 @section('content')
 <div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title">Detail Mobile Campaign</h3>
+        <h3 class="card-title">Detail Nomor Cantik Campaign</h3>
     </div>
 
     <div class="card-body">
@@ -161,10 +161,11 @@
 
         {{-- TOMBOL --}}
         <div class="form-group d-flex gap-2 mt-4">
-            <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
-            <a href="{{ route('campaign-mobile.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1 m-1">Edit</a>
+            <a href="{{ route('campaign-nomor-cantik.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
+            <a href="{{ route('campaign-nomor-cantik.edit', $campaign->id) }}" class="btn btn-warning flex-grow-1 m-1">Edit</a>
         </div>
 
     </div>
 </div>
 @endsection
+

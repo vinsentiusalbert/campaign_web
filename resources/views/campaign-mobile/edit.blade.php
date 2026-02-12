@@ -141,6 +141,7 @@
                 <label>Whitelist File (Excel)</label>
                 <input type="file"
                     name="nama_file_whitelist"
+                    id="file_whitelist"
                     class="form-control"
                     accept=".xls,.xlsx">
 

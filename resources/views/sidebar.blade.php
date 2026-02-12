@@ -40,6 +40,16 @@
         <!-- Sidebar Menu -->
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                @if($isUser)
+                <li class="nav-header">Campaign</li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-waba-interaktif.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-waba-interaktif.index') ? 'active' : '' }}">
+                        <i class="nav-icon fab fa-whatsapp" style="color:#25D366;"></i>
+                        <p>WABA Interaktif</p>
+                    </a>
+                </li>
+                @else
                 <li class="nav-header">Campaign</li>
                 <li class="nav-item">
                     <a href="{{ route('campaign-mobile.index') }}"
@@ -56,6 +66,37 @@
                         <p>Campaign Indihome</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-orbit.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-orbit.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-satellite-dish" style="color:#6f42c1;"></i>
+                        <p>Campaign Orbit</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-soundbox.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-soundbox.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-volume-up" style="color:#20c997;"></i>
+                        <p>Campaign Soundbox</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-nomor-cantik.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-nomor-cantik.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-sim-card" style="color:#17a2b8;"></i>
+                        <p>Nomor Cantik Telkomsel</p>
+                    </a>
+                </li>
+                @if($isAdmin || $isSuper)
+                <li class="nav-item">
+                    <a href="{{ route('campaign-waba-interaktif.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-waba-interaktif.index') ? 'active' : '' }}">
+                        <i class="nav-icon fab fa-whatsapp" style="color:#25D366;"></i>
+                        <p>WABA Interaktif</p>
+                    </a>
+                </li>
+                @endif
+                @endif
 
                 @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
                 <li class="nav-header">System Management</li>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CampaignIndihome;
+use App\Models\CampaignWabaInteraktif;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
@@ -13,25 +13,28 @@ use Illuminate\Support\Facades\File;
 
 
 
-class CampaignIndihomeController extends Controller
+class CampaignWabaInteraktifController extends Controller
 {
-    private function ensureCampaignAccess(CampaignIndihome $campaign): void
+    private function ensureCampaignAccess(CampaignWabaInteraktif $campaign): void
     {
-        if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
+        if (in_array(auth()->user()->role, ['Admin', 'Super'])) {
+            return;
+        }
+        if ($campaign->user_id !== auth()->id()) {
             abort(403);
         }
     }
     /**
-     * Tampilkan semua campaign Indihome.
+     * Tampilkan semua campaign WABA Interaktif.
      */
     public function index()
     {
-        $campaigns = CampaignIndihome::orderBy('created_at', 'desc')->paginate(10);
-        return view('campaign-indihome.index', compact('campaigns'));
+        $campaigns = CampaignWabaInteraktif::orderBy('created_at', 'desc')->paginate(10);
+        return view('campaign-waba-interaktif.index', compact('campaigns'));
     }
     public function data(Request $request)
     {
-        $query = CampaignIndihome::query();
+        $query = CampaignWabaInteraktif::query();
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
@@ -46,8 +49,8 @@ class CampaignIndihomeController extends Controller
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $edit = route('campaign-indihome.edit', $row->id);
-                $show = route('campaign-indihome.show', $row->id);
+                $edit = route('campaign-waba-interaktif.edit', $row->id);
+                $show = route('campaign-waba-interaktif.show', $row->id);
 
                 $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
@@ -58,7 +61,7 @@ class CampaignIndihomeController extends Controller
                     in_array(Auth::user()->role, ['Admin', 'Super']) &&
                     $row->status == 0
                 ) {
-                    $activateUrl = route('campaign-indihome.activate', $row->id);
+                    $activateUrl = route('campaign-waba-interaktif.activate', $row->id);
                     $buttons .= '
                         <button onclick="activateCampaign('.$row->id.')" 
                                 class="btn btn-primary btn-sm">
@@ -67,7 +70,7 @@ class CampaignIndihomeController extends Controller
                     ';
                 }
                 if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
-                    $downloadUrl = route('campaign-indihome.download', $row->id);
+                    $downloadUrl = route('campaign-waba-interaktif.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     ';
@@ -93,15 +96,15 @@ class CampaignIndihomeController extends Controller
             ->make(true);
     }
     /**
-     * Tampilkan form create campaign Indihome.
+     * Tampilkan form create campaign WABA Interaktif.
      */
     public function create()
     {
-        return view('campaign-indihome.create');
+        return view('campaign-waba-interaktif.create');
     }
 
     /**
-     * Simpan campaign Indihome baru.
+     * Simpan campaign WABA Interaktif baru.
      */
     public function store(Request $request)
     {
@@ -112,7 +115,7 @@ class CampaignIndihomeController extends Controller
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
 
-            'campaign_usecase' => 'nullable|string|max:255',
+            'campaign_usecase' => 'nullable|string|in:Sales/Leads,Retention/Reminder',
             'message_body' => 'nullable|string',
 
             // Image
@@ -188,11 +191,11 @@ class CampaignIndihomeController extends Controller
         | SAVE DATA
         =============================== */
 
-        CampaignIndihome::create($validated);
+        CampaignWabaInteraktif::create($validated);
 
         return redirect()
-            ->route('campaign-indihome.index')
-            ->with('success', 'Campaign Indihome berhasil dibuat');
+            ->route('campaign-waba-interaktif.index')
+            ->with('success', 'Campaign WABA Interaktif berhasil dibuat');
     }
 
 
@@ -201,34 +204,34 @@ class CampaignIndihomeController extends Controller
      */
     public function show(string $id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
-        return view('campaign-indihome.show', compact('campaign'));
+        return view('campaign-waba-interaktif.show', compact('campaign'));
     }
 
     /**
-     * Tampilkan form edit campaign Indihome.
+     * Tampilkan form edit campaign WABA Interaktif.
      */
     public function edit($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-indihome.edit', compact('campaign'));
+        return view('campaign-waba-interaktif.edit', compact('campaign'));
     }
 
     /**
-     * Update campaign Indihome.
+     * Update campaign WABA Interaktif.
      */
-    public function update(Request $request, CampaignIndihome $campaignIndihome)
+    public function update(Request $request, CampaignWabaInteraktif $campaignWabaInteraktif)
     {
-        $this->ensureCampaignAccess($campaignIndihome);
+        $this->ensureCampaignAccess($campaignWabaInteraktif);
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
 
-            'campaign_usecase' => 'nullable|string|max:255',
+            'campaign_usecase' => 'nullable|string|in:Sales/Leads,Retention/Reminder',
             'message_body' => 'nullable|string',
 
             // IMAGE
@@ -265,9 +268,9 @@ class CampaignIndihomeController extends Controller
         if ($validated['campaign_type'] === 'LBA') {
 
             // 🔴 LBA → whitelist harus NULL
-            if ($campaignIndihome->nama_file_whitelist) {
+            if ($campaignWabaInteraktif->nama_file_whitelist) {
                 Storage::disk('public')
-                    ->delete('campaign/whitelist/' . $campaignIndihome->nama_file_whitelist);
+                    ->delete('campaign/whitelist/' . $campaignWabaInteraktif->nama_file_whitelist);
             }
 
             $validated['nama_file_whitelist'] = null;
@@ -284,9 +287,9 @@ class CampaignIndihomeController extends Controller
         if ($request->hasFile('kv_message_image')) {
 
             // delete old image
-            if ($campaignIndihome->kv_message_image) {
+            if ($campaignWabaInteraktif->kv_message_image) {
                 Storage::disk('public')->delete(
-                    'campaign/kv-message/'.$campaignIndihome->kv_message_image
+                    'campaign/kv-message/'.$campaignWabaInteraktif->kv_message_image
                 );
             }
 
@@ -305,9 +308,9 @@ class CampaignIndihomeController extends Controller
         if ($request->hasFile('file_whitelist')) {
 
             // delete old file
-            if ($campaignIndihome->file_whitelist) {
+            if ($campaignWabaInteraktif->file_whitelist) {
                 Storage::disk('public')->delete(
-                    'campaign/whitelist/'.$campaignIndihome->file_whitelist
+                    'campaign/whitelist/'.$campaignWabaInteraktif->file_whitelist
                 );
             }
 
@@ -325,9 +328,9 @@ class CampaignIndihomeController extends Controller
         // =========================
         if ($request->hasFile('cc')) {
 
-            if ($campaignIndihome->cc) {
+            if ($campaignWabaInteraktif->cc) {
                 Storage::disk('public')->delete(
-                    'campaign/cc/' . $campaignIndihome->cc
+                    'campaign/cc/' . $campaignWabaInteraktif->cc
                 );
             }
 
@@ -341,33 +344,33 @@ class CampaignIndihomeController extends Controller
         /* ===============================
         | UPDATE DATA
         =============================== */
-        $campaignIndihome->update($validated);
+        $campaignWabaInteraktif->update($validated);
 
         return redirect()
-            ->route('campaign-indihome.index')
-            ->with('success', 'Campaign Indihome berhasil diperbarui!');
+            ->route('campaign-waba-interaktif.index')
+            ->with('success', 'Campaign WABA Interaktif berhasil diperbarui!');
     }
 
 
     /**
-     * Hapus campaign Indihome.
+     * Hapus campaign WABA Interaktif.
      */
     public function destroy(string $id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         // dd($campaign);
         $campaign->delete();
 
         return response()->json([
             'status' => true,
-            'message' => 'Campaign Indihome berhasil dihapus'
+            'message' => 'Campaign WABA Interaktif berhasil dihapus'
         ]);
     }
 
     public function download($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
         $tempPath = storage_path('app/public/temp');
@@ -467,7 +470,7 @@ class CampaignIndihomeController extends Controller
 
     public function activate($id)
     {
-        $campaign = CampaignIndihome::findOrFail($id);
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
 
         // hanya Admin & Super
         if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
@@ -484,3 +487,4 @@ class CampaignIndihomeController extends Controller
     }
 
 }
+

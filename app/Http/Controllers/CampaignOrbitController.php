@@ -2,35 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CampaignOrbit;
 use Illuminate\Http\Request;
-use App\Models\CampaignMobile;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Auth;
 use ZipArchive;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 
-class CampaignMobileController extends Controller
+
+class CampaignOrbitController extends Controller
 {
-    private function ensureCampaignAccess(CampaignMobile $campaign): void
+    private function ensureCampaignAccess(CampaignOrbit $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
             abort(403);
         }
     }
     /**
-     * Display a listing of the resource.
+     * Tampilkan semua campaign Orbit.
      */
     public function index()
     {
-        // $query = CampaignMobile::get();
-        // dd($query);
-        return view('campaign-mobile.index');
+        $campaigns = CampaignOrbit::orderBy('created_at', 'desc')->paginate(10);
+        return view('campaign-orbit.index', compact('campaigns'));
     }
     public function data(Request $request)
     {
-        $query = CampaignMobile::query();
+        $query = CampaignOrbit::query();
+
+        // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('user_id', auth()->id());
         }
@@ -43,8 +46,8 @@ class CampaignMobileController extends Controller
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $edit = route('campaign-mobile.edit', $row->id);
-                $show = route('campaign-mobile.show', $row->id);
+                $edit = route('campaign-orbit.edit', $row->id);
+                $show = route('campaign-orbit.show', $row->id);
 
                 $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
@@ -55,6 +58,7 @@ class CampaignMobileController extends Controller
                     in_array(Auth::user()->role, ['Admin', 'Super']) &&
                     $row->status == 0
                 ) {
+                    $activateUrl = route('campaign-orbit.activate', $row->id);
                     $buttons .= '
                         <button onclick="activateCampaign('.$row->id.')" 
                                 class="btn btn-primary btn-sm">
@@ -62,9 +66,8 @@ class CampaignMobileController extends Controller
                         </button>
                     ';
                 }
-
-                if (Auth::user()->role === 'Admin' || auth()->user()->role === 'Super') {
-                    $downloadUrl = route('campaign-mobile.download', $row->id);
+                if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
+                    $downloadUrl = route('campaign-orbit.download', $row->id);
                     $buttons .= '
                         <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
                     ';
@@ -76,106 +79,121 @@ class CampaignMobileController extends Controller
 
                 return $buttons;
             })
+            ->editColumn('periode_campaign_start', function ($row) {
+                return $row->periode_campaign_start
+                    ? date('d-m-Y H:i', strtotime($row->periode_campaign_start))
+                    : '-';
+            })
+            ->editColumn('periode_campaign_end', function ($row) {
+                return $row->periode_campaign_end
+                    ? date('d-m-Y H:i', strtotime($row->periode_campaign_end))
+                    : '-';
+            })
             ->rawColumns(['aksi', 'status'])
             ->make(true);
     }
     /**
-     * Show the form for creating a new resource.
+     * Tampilkan form create campaign Orbit.
      */
     public function create()
     {
-        return view('campaign-mobile.create');
+        return view('campaign-orbit.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Simpan campaign Orbit baru.
      */
     public function store(Request $request)
     {
-        // Validasi data
         $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
-            'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
+
+            'campaign_usecase' => 'nullable|string|in:Sales Activation',
             'message_body' => 'nullable|string',
 
-            // KV IMAGE
-            'kv_message_link' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-
-            'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
-
+            // Image
+            'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            
             'campaign_type' => 'required|in:Broadcast,LBA',
 
-            // WHITELIST FILE
-            'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
-            
+            // Excel
+            'file_whitelist' => 'nullable|file|mimes:xls,xlsx',
+
             'longitude_latitude' => 'nullable|string|max:255',
             'radius' => 'nullable|string|max:255',
 
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
-            'jumlah_blast' => 'nullable|integer|min:0',
 
+            'jumlah_blast' => 'nullable|integer|min:0',
+            'nama_template' => 'nullable|string|max:255',
+
+            'carousel_product_1' => 'nullable|string|max:255',
+            'kv_product_1' => 'nullable|string',
+            'carousel_product_2' => 'nullable|string|max:255',
+            'kv_product_2' => 'nullable|string',
+            'carousel_product_3' => 'nullable|string|max:255',
+            'kv_product_3' => 'nullable|string',
+            'carousel_product_4' => 'nullable|string|max:255',
+            'kv_product_4' => 'nullable|string',
+            'carousel_product_5' => 'nullable|string|max:255',
+            'kv_product_5' => 'nullable|string',
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
-
-            'nama_campaign' => 'nullable|string|max:255',
         ]);
+        /* ===============================
+        | HANDLE FILE UPLOAD
+        =============================== */
 
-        $validated['user_id'] = auth()->id();
-        $validated['status'] = 0;
+        // 🔹 KV Message Image
+        if ($request->hasFile('kv_message_image')) {
 
-        if ($validated['campaign_type'] === 'LBA') {
-            $validated['nama_file_whitelist'] = null;
-        }
+            $image = $request->file('kv_message_image');
 
-        if ($validated['campaign_type'] === 'Broadcast') {
-            $validated['longitude_latitude'] = null;
-            $validated['radius'] = null;
-        }
-
-        // =========================
-        // KV MESSAGE IMAGE
-        // =========================
-        if ($request->hasFile('kv_message_link')) {
-            $image = $request->file('kv_message_link');
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $imageName = time() . '_orbit_' . $image->getClientOriginalName();
 
             $image->storeAs('campaign/kv-message', $imageName, 'public');
-            $validated['kv_message_link'] = $imageName; // simpan nama file
+
+            // SAVE ONLY FILE NAME
+            $validated['kv_message_link'] = $imageName;
         }
 
-        // =========================
-        // WHITELIST FILE
-        // =========================
-        if ($request->hasFile('nama_file_whitelist')) {
-            $file = $request->file('nama_file_whitelist');
-            $fileName = time() . '_' . $file->getClientOriginalName();
+        // 🔹 Whitelist Excel
+        if ($request->hasFile('file_whitelist')) {
+
+            $file = $request->file('file_whitelist');
+
+            $fileName = time() . '_orbit_' . $file->getClientOriginalName();
 
             $file->storeAs('campaign/whitelist', $fileName, 'public');
+
+            // SAVE ONLY FILE NAME
             $validated['nama_file_whitelist'] = $fileName;
         }
-
         // =========================
         // CC FILE
         // =========================
         if ($request->hasFile('cc')) {
             $ccFile = $request->file('cc');
-            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+            $ccFileName = time() . '_orbit_' . $ccFile->getClientOriginalName();
 
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
         }
+        /* ===============================
+        | SAVE DATA
+        =============================== */
 
-        // Simpan ke database
-        CampaignMobile::create($validated);
+        CampaignOrbit::create($validated);
 
         return redirect()
-            ->route('campaign-mobile.index')
-            ->with('success', 'Campaign mobile berhasil dibuat.');
+            ->route('campaign-orbit.index')
+            ->with('success', 'Campaign Orbit berhasil dibuat');
     }
-
 
 
     /**
@@ -183,105 +201,122 @@ class CampaignMobileController extends Controller
      */
     public function show(string $id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignOrbit::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
-        return view('campaign-mobile.show', compact('campaign'));
+        return view('campaign-orbit.show', compact('campaign'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Tampilkan form edit campaign Orbit.
      */
     public function edit($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignOrbit::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-mobile.edit', compact('campaign'));
+        return view('campaign-orbit.edit', compact('campaign'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update campaign Orbit.
+     */
+    public function update(Request $request, CampaignOrbit $campaignOrbit)
     {
-        $campaign = CampaignMobile::findOrFail($id);
-        $this->ensureCampaignAccess($campaign);
-
-        // Validasi data
+        $this->ensureCampaignAccess($campaignOrbit);
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
-            'campaign_usecase' => 'nullable|string|in:ShortMax,Netflix,YouTube,MyTelkomsel',
+
+            'campaign_usecase' => 'nullable|string|in:Sales Activation',
             'message_body' => 'nullable|string',
 
-            // KV IMAGE
-            'kv_message_link' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
-
-            'shortmax_user_type' => 'nullable|string|in:Download,Belum Download',
+            // IMAGE
+            'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
             'campaign_type' => 'required|in:Broadcast,LBA',
 
-            // WHITELIST FILE
-            'nama_file_whitelist' => 'nullable|file|mimes:xlsx,xls|max:5120',
-            
+            // EXCEL
+            'file_whitelist' => 'nullable|mimes:xls,xlsx|max:5120',
+
             'longitude_latitude' => 'nullable|string|max:255',
             'radius' => 'nullable|string|max:255',
 
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
+
             'jumlah_blast' => 'nullable|integer|min:0',
+            'nama_template' => 'nullable|string|max:255',
+
+            'carousel_product_1' => 'nullable|string|max:255',
+            'kv_product_1' => 'nullable|string',
+            'carousel_product_2' => 'nullable|string|max:255',
+            'kv_product_2' => 'nullable|string',
+            'carousel_product_3' => 'nullable|string|max:255',
+            'kv_product_3' => 'nullable|string',
+            'carousel_product_4' => 'nullable|string|max:255',
+            'kv_product_4' => 'nullable|string',
+            'carousel_product_5' => 'nullable|string|max:255',
+            'kv_product_5' => 'nullable|string',
 
             // ✅ CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
-
-            'nama_campaign' => 'nullable|string|max:255',
         ]);
-
         if ($validated['campaign_type'] === 'LBA') {
-            if ($campaign->nama_file_whitelist) {
-                Storage::disk('public')->delete(
-                    'campaign/whitelist/' . $campaign->nama_file_whitelist
-                );
-            }
-            $validated['nama_file_whitelist'] = null;
-        }
 
-        if ($validated['campaign_type'] === 'Broadcast') {
+            // 🔴 LBA → whitelist harus NULL
+            if ($campaignOrbit->nama_file_whitelist) {
+                Storage::disk('public')
+                    ->delete('campaign/whitelist/' . $campaignOrbit->nama_file_whitelist);
+            }
+
+            $validated['nama_file_whitelist'] = null;
+
+        } elseif ($validated['campaign_type'] === 'Broadcast') {
+
+            // 🔴 Broadcast → LBA data harus NULL
             $validated['longitude_latitude'] = null;
             $validated['radius'] = null;
         }
+        /* ===============================
+        | KV MESSAGE IMAGE
+        =============================== */
+        if ($request->hasFile('kv_message_image')) {
 
-        // =========================
-        // KV MESSAGE IMAGE
-        // =========================
-        if ($request->hasFile('kv_message_link')) {
-
-            if ($campaign->kv_message_link) {
+            // delete old image
+            if ($campaignOrbit->kv_message_image) {
                 Storage::disk('public')->delete(
-                    'campaign/kv-message/' . $campaign->kv_message_link
+                    'campaign/kv-message/'.$campaignOrbit->kv_message_image
                 );
             }
 
-            $image = $request->file('kv_message_link');
-            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image = $request->file('kv_message_image');
+            $imageName = time().'_orbit_'.$image->getClientOriginalName();
 
             $image->storeAs('campaign/kv-message', $imageName, 'public');
+
+            // save only name
             $validated['kv_message_link'] = $imageName;
         }
 
-        // =========================
-        // WHITELIST FILE
-        // =========================
-        if ($request->hasFile('nama_file_whitelist')) {
+        /* ===============================
+        | WHITELIST FILE
+        =============================== */
+        if ($request->hasFile('file_whitelist')) {
 
-            if ($campaign->nama_file_whitelist) {
+            // delete old file
+            if ($campaignOrbit->file_whitelist) {
                 Storage::disk('public')->delete(
-                    'campaign/whitelist/' . $campaign->nama_file_whitelist
+                    'campaign/whitelist/'.$campaignOrbit->file_whitelist
                 );
             }
 
-            $file = $request->file('nama_file_whitelist');
-            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file = $request->file('file_whitelist');
+            $fileName = time().'_orbit_'.$file->getClientOriginalName();
 
             $file->storeAs('campaign/whitelist', $fileName, 'public');
+
+            // save only name
             $validated['nama_file_whitelist'] = $fileName;
         }
 
@@ -290,65 +325,52 @@ class CampaignMobileController extends Controller
         // =========================
         if ($request->hasFile('cc')) {
 
-            if ($campaign->cc) {
+            if ($campaignOrbit->cc) {
                 Storage::disk('public')->delete(
-                    'campaign/cc/' . $campaign->cc
+                    'campaign/cc/' . $campaignOrbit->cc
                 );
             }
 
             $ccFile = $request->file('cc');
-            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
+            $ccFileName = time() . '_orbit_' . $ccFile->getClientOriginalName();
 
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
         }
 
-        $campaign->update($validated);
+        /* ===============================
+        | UPDATE DATA
+        =============================== */
+        $campaignOrbit->update($validated);
 
         return redirect()
-            ->route('campaign-mobile.index')
-            ->with('success', 'Campaign berhasil diperbarui.');
+            ->route('campaign-orbit.index')
+            ->with('success', 'Campaign Orbit berhasil diperbarui!');
     }
 
 
-
     /**
-     * Remove the specified resource from storage.
+     * Hapus campaign Orbit.
      */
     public function destroy(string $id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignOrbit::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
-
-        if ($campaign->kv_message_link) {
-            Storage::disk('public')->delete('campaign/kv-message/' . $campaign->kv_message_link);
-        }
-        if ($campaign->nama_file_whitelist) {
-            Storage::disk('public')->delete('campaign/whitelist/' . $campaign->nama_file_whitelist);
-        }
-        if ($campaign->cc) {
-            Storage::disk('public')->delete('campaign/cc/' . $campaign->cc);
-        }
-
+        // dd($campaign);
         $campaign->delete();
 
         return response()->json([
             'status' => true,
-            'message' => 'Campaign berhasil dihapus'
+            'message' => 'Campaign Orbit berhasil dihapus'
         ]);
     }
 
     public function download($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignOrbit::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        // Temp zip path
         $tempPath = storage_path('app/public/temp');
-        if (!is_dir($tempPath)) {
-            mkdir($tempPath, 0755, true);
-        }
-
         $zipFileName = 'campaign_'.$campaign->id.'.zip';
         $zipPath = $tempPath.'/'.$zipFileName;
 
@@ -360,43 +382,53 @@ class CampaignMobileController extends Controller
 
         /**
          * ==========================
-         * CSV DATA
+         * CSV → DIRECT STRING
          * ==========================
          */
-        $csvHeader = [
-            'Area',
-            'Region',
-            'Branch',
-            'Campaign Usecase',
-            'Message Body',
-            'User Type',
-            'Periode Start',
-            'Periode End',
-            'Jumlah Blast',
-            'Nama Campaign'
+        $csvData = [];
+        $csvData[] = [
+            'Area','Region','Branch','Campaign Usecase', 'Message Body','Campaign Type',
+            'Message Body','User Type',
+            'Periode Start','Periode End',
+            'Jumlah Blast','Nama Campaign',
+            'carousel_product_1',
+            'kv_product_1',
+            'carousel_product_2',
+            'kv_product_2',
+            'carousel_product_3',
+            'kv_product_3',
+            'carousel_product_4',
+            'kv_product_4',
+            'carousel_product_5',
+            'kv_product_5',
         ];
 
-        $csvRow = [
+        $csvData[] = [
             $campaign->area,
             $campaign->region,
             $campaign->branch,
             $campaign->campaign_usecase,
+            $campaign->message_body,
+            $campaign->campaign_type,
             strip_tags($campaign->message_body),
             $campaign->shortmax_user_type,
             $campaign->periode_campaign_start,
             $campaign->periode_campaign_end,
             $campaign->jumlah_blast,
-            $campaign->nama_campaign,
+            $campaign->nama_template,
+            $campaign
         ];
 
-        $csvString  = '"' . implode('","', $csvHeader) . '"' . "\n";
-        $csvString .= '"' . implode('","', $csvRow) . '"' . "\n";
+        $csvString = '';
+        foreach ($csvData as $row) {
+            $csvString .= '"' . implode('","', $row) . '"' . "\n";
+        }
 
         $zip->addFromString('campaign_data.csv', $csvString);
 
         /**
          * ==========================
-         * ATTACHMENTS
+         * ADD ATTACHMENTS (SAFE)
          * ==========================
          */
         $attachments = [
@@ -429,13 +461,13 @@ class CampaignMobileController extends Controller
 
         $zip->close();
 
-        return response()
-            ->download($zipPath)
-            ->deleteFileAfterSend(true);
+        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
+
+
     public function activate($id)
     {
-        $campaign = CampaignMobile::findOrFail($id);
+        $campaign = CampaignOrbit::findOrFail($id);
 
         // hanya Admin & Super
         if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
@@ -450,4 +482,6 @@ class CampaignMobileController extends Controller
             'message' => 'Campaign berhasil diaktifkan'
         ]);
     }
+
 }
+

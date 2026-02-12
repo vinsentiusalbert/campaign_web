@@ -1,6 +1,6 @@
 @extends('master')
 
-@section('title', 'Create Mobile Campaign')
+@section('title', 'Create Nomor Cantik Campaign')
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -44,11 +44,11 @@
 @section('content')
 <div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title">Create Mobile Campaign</h3>
+        <h3 class="card-title">Create Nomor Cantik Campaign</h3>
     </div>
 
     <div class="card-body">
-        <form action="{{ route('campaign-mobile.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('campaign-nomor-cantik.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
@@ -86,9 +86,7 @@
                 <label for="campaign_usecase">Campaign Usecase</label>
                 <select id="campaign_usecase" name="campaign_usecase" class="form-control select2">
                     <option value="">-- Pilih Campaign Usecase --</option>
-                    @foreach(['ShortMax', 'Netflix', 'YouTube', 'MyTelkomsel'] as $usecase)
-                        <option value="{{ $usecase }}" {{ old('campaign_usecase') == $usecase ? 'selected' : '' }}>{{ $usecase }}</option>
-                    @endforeach
+                    <option value="Sales Activation" {{ old('campaign_usecase') == 'Sales Activation' ? 'selected' : '' }}>Sales Activation</option>
                 </select>
                 @error('campaign_usecase') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
@@ -223,7 +221,7 @@
 
             {{-- Tombol --}}
             <div class="form-group d-flex gap-2">
-                <a href="{{ route('campaign-mobile.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
+                <a href="{{ route('campaign-nomor-cantik.index') }}" class="btn btn-secondary flex-grow-1 m-1">Kembali</a>
                 <button type="submit" id="submitBtn" class="btn btn-primary flex-grow-1 m-1">Simpan</button>
             </div>
         </form>
@@ -359,3 +357,4 @@ function previewWhitelist(input) {
 }
 </script>
 @endsection
+

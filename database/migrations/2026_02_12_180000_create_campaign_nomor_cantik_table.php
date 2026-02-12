@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('campaign_mobile', function (Blueprint $table) {
+        Schema::create('campaign_nomor_cantik', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
             $table->string('area')->nullable();
@@ -46,6 +46,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('campaign_mobile');
+        Schema::dropIfExists('campaign_nomor_cantik');
     }
 };
+

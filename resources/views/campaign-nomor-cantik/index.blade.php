@@ -1,5 +1,5 @@
 @extends('master')
-@section('title') Campaign Mobile @endsection
+@section('title') Campaign Nomor Cantik @endsection
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -29,17 +29,17 @@
 
 <div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title font-weight-bold">Campaign Mobile</h3>
+        <h3 class="card-title font-weight-bold">Campaign Nomor Cantik</h3>
     </div>
     <div class="card-body">
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('campaign-mobile.create') }}" class="btn btn-info" id="btn-add-campaign">
+            <a href="{{ route('campaign-nomor-cantik.create') }}" class="btn btn-info" id="btn-add-campaign">
                 <i class="fas fa-plus"></i> Tambah Campaign
             </a>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover w-100" id="campaignMobileTable">
+            <table class="table table-sm table-striped table-hover w-100" id="CampaignNomorCantikTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -75,10 +75,10 @@
 $(document).ready(function() {
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
-    var table = $('#campaignMobileTable').DataTable({
+    var table = $('#CampaignNomorCantikTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('campaign-mobile.data') }}",
+        ajax: "{{ route('campaign-nomor-cantik.data') }}",
         columns: [
             { data: 'id', name: 'id' },
             { data: 'area', name: 'area' },
@@ -114,7 +114,7 @@ $(document).ready(function() {
         }).then((result) => {
             if(result.isConfirmed){
                 $.ajax({
-                    url: "{{ url('campaign-mobile') }}/" + id,
+                    url: "{{ url('campaign-nomor-cantik') }}/" + id,
                     type: 'DELETE',
                     success: function(res){
                         table.ajax.reload(null, false);
@@ -139,11 +139,11 @@ function activateCampaign(id) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.post(
-                `/campaign-mobile/${id}/activate`,
+                `/campaign-nomor-cantik/${id}/activate`,
                 {_token: '{{ csrf_token() }}'},
                 function (res) {
                     Swal.fire('Berhasil!', res.message, 'success');
-                    $('#campaignMobileTable').DataTable().ajax.reload(null, false);
+                    $('#CampaignNomorCantikTable').DataTable().ajax.reload(null, false);
                 }
             ).fail(function () {
                 Swal.fire('Error!', 'Gagal activate campaign', 'error');
@@ -153,3 +153,4 @@ function activateCampaign(id) {
 }
 </script>
 @endsection
+
