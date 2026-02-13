@@ -36,7 +36,7 @@
 
         <div class="card-body">
 
-            {{-- AREA --}}
+            <!-- {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
                 <select name="area" id="area" class="form-control select2">
@@ -61,7 +61,7 @@
                 <label>Branch</label>
                 <input type="text" name="branch" class="form-control"
                        value="{{ old('branch', $campaign->branch) }}">
-            </div>
+            </div> -->
 
             {{-- USECASE --}}
             <div class="form-group">

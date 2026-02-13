@@ -47,9 +47,9 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Area</th>
+                        <!-- <th>Area</th>
                         <th>Region</th>
-                        <th>Branch</th>
+                        <th>Branch</th> -->
                         <th>Usecase</th>
                         <th>Campaign Type</th>
                         <th>Start</th>
@@ -90,9 +90,9 @@ $(document).ready(function () {
         order: [[0, 'desc']],
         columns: [
             { data: 'id', name: 'id' },
-            { data: 'area', name: 'area' },
-            { data: 'region', name: 'region' },
-            { data: 'branch', name: 'branch' },
+            // { data: 'area', name: 'area' },
+            // { data: 'region', name: 'region' },
+            // { data: 'branch', name: 'branch' },
             { data: 'campaign_usecase', name: 'campaign_usecase' },
             { data: 'campaign_type', name: 'campaign_type' },
             { data: 'periode_campaign_start', name: 'periode_campaign_start' },
