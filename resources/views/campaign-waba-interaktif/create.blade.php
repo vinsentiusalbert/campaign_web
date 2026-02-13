@@ -56,7 +56,7 @@
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-            {{-- AREA --}}
+            <!-- {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
                 <select name="area" id="area" class="form-control select2">
@@ -80,7 +80,7 @@
             <div class="form-group">
                 <label>Branch</label>
                 <input type="text" name="branch" class="form-control" value="{{ old('branch') }}">
-            </div>
+            </div> -->
 
             {{-- CAMPAIGN USECASE --}}
             <div class="form-group">

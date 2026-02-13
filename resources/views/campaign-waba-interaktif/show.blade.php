@@ -29,7 +29,7 @@
 
     <div class="card-body">
 
-        {{-- AREA --}}
+        <!-- {{-- AREA --}}
         <div class="form-group">
             <label>Area</label>
             <input type="text" class="form-control" value="{{ $campaign->area }}" readonly>
@@ -45,7 +45,7 @@
         <div class="form-group">
             <label>Branch</label>
             <input type="text" class="form-control" value="{{ $campaign->branch }}" readonly>
-        </div>
+        </div> -->
 
         {{-- CAMPAIGN USECASE --}}
         <div class="form-group">
