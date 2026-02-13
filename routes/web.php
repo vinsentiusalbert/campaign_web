@@ -45,6 +45,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::delete('/{id}', [CampaignMobileController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignMobileController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignMobileController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignMobileController::class, 'toggleTesting'])->name('toggle-testing');
     });
     Route::prefix('campaign-indihome')->name('campaign-indihome.')->middleware('auth')->group(function () {
         Route::get('/', [CampaignIndihomeController::class, 'index'])->name('index');
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::delete('/{id}', [CampaignIndihomeController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignIndihomeController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignIndihomeController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignIndihomeController::class, 'toggleTesting'])->name('toggle-testing');
     });
 
     Route::prefix('campaign-orbit')->name('campaign-orbit.')->middleware('auth')->group(function () {
@@ -70,6 +72,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::delete('/{id}', [CampaignOrbitController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignOrbitController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignOrbitController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignOrbitController::class, 'toggleTesting'])->name('toggle-testing');
     });
 
     Route::prefix('campaign-soundbox')->name('campaign-soundbox.')->middleware('auth')->group(function () {
@@ -83,6 +86,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::delete('/{id}', [CampaignSoundboxController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignSoundboxController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignSoundboxController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignSoundboxController::class, 'toggleTesting'])->name('toggle-testing');
     });
 
     Route::prefix('campaign-nomor-cantik')->name('campaign-nomor-cantik.')->middleware('auth')->group(function () {
@@ -96,6 +100,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::delete('/{id}', [CampaignNomorCantikController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignNomorCantikController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignNomorCantikController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignNomorCantikController::class, 'toggleTesting'])->name('toggle-testing');
     });
 });
 
@@ -115,5 +120,6 @@ Route::middleware(['auth', 'checkrole:User,Admin,Super'])->group(function () {
         Route::delete('/{id}', [CampaignWabaInteraktifController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/download', [CampaignWabaInteraktifController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignWabaInteraktifController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignWabaInteraktifController::class, 'toggleTesting'])->name('toggle-testing');
     });
 });

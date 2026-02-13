@@ -51,6 +51,7 @@ return new class extends Migration
             $table->string('carousel_product_5')->nullable();
             $table->text('kv_product_5')->nullable();
             $table->integer('status')->default(0);
+            $table->integer('status_testing')->default(0);
 
             $table->timestamps();
         });

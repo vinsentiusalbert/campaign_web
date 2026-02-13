@@ -48,6 +48,12 @@ class CampaignWabaInteraktifController extends Controller
                 }
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
+            ->addColumn('status_testing', function ($row) {
+                if ($row->status_testing == 1) {
+                    return '<span class="badge badge-success">Active</span>';
+                }
+                return '<span class="badge badge-secondary">Not Active</span>';
+            })
             ->addColumn('aksi', function ($row) {
                 $edit = route('campaign-waba-interaktif.edit', $row->id);
                 $show = route('campaign-waba-interaktif.show', $row->id);
@@ -68,6 +74,25 @@ class CampaignWabaInteraktifController extends Controller
                             Activate
                         </button>
                     ';
+                }
+                // Activate / Non Active Testing
+                if (in_array(Auth::user()->role, ['Admin', 'Super'])) {
+
+                    if ($row->status_testing == 1) {
+                        $buttons .= '
+                            <button onclick="toggleTesting('.$row->id.')" 
+                                    class="btn btn-outline-dark btn-sm ml-1">
+                                Non Active Testing
+                            </button>
+                        ';
+                    } else {
+                        $buttons .= '
+                            <button onclick="toggleTesting('.$row->id.')" 
+                                    class="btn btn-outline-info btn-sm ml-1">
+                                Activate Testing
+                            </button>
+                        ';
+                    }
                 }
                 if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
                     $downloadUrl = route('campaign-waba-interaktif.download', $row->id);
@@ -92,7 +117,7 @@ class CampaignWabaInteraktifController extends Controller
                     ? date('d-m-Y H:i', strtotime($row->periode_campaign_end))
                     : '-';
             })
-            ->rawColumns(['aksi', 'status'])
+            ->rawColumns(['aksi', 'status', 'status_testing'])
             ->make(true);
     }
     /**
@@ -485,6 +510,23 @@ class CampaignWabaInteraktifController extends Controller
             'message' => 'Campaign berhasil diaktifkan'
         ]);
     }
+    public function toggleTesting($id)
+    {
+        $campaign = CampaignWabaInteraktif::findOrFail($id);
 
+        // Optional: batasi hanya Admin & Super
+        if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
+            abort(403);
+        }
+
+        // Toggle value
+        $campaign->status_testing = $campaign->status_testing == 1 ? 0 : 1;
+        $campaign->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status testing berhasil diubah'
+        ]);
+    }
 }
 

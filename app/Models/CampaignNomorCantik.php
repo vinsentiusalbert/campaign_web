@@ -27,7 +27,8 @@ class CampaignNomorCantik extends Model
         'jumlah_blast',
         'cc',
         'nama_campaign',
-        'status'
+        'status',
+        'status_testing'
     ];
 }
 

@@ -58,6 +58,7 @@
                         <th>Nama Campaign</th>
                         {{-- <th>Created At</th>
                         <th>Updated At</th> --}}
+                        <th>Status Testing</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
@@ -96,6 +97,7 @@ $(document).ready(function() {
             { data: 'nama_campaign', name: 'nama_campaign' },
             // { data: 'created_at', name: 'created_at' },
             // { data: 'updated_at', name: 'updated_at' },
+            { data: 'status_testing', name: 'status_testing' },
             { data: 'status', name: 'status' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
         ],
@@ -149,6 +151,47 @@ function activateCampaign(id) {
                 Swal.fire('Error!', 'Gagal activate campaign', 'error');
             });
         }
+    });
+}
+
+function toggleTesting(id) {
+
+    Swal.fire({
+        title: 'Ubah status testing?',
+        text: 'Status testing campaign akan diubah',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, ubah'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            $.post(
+                `/campaign-mobile/${id}/toggle-testing`,
+                {_token: '{{ csrf_token() }}'},
+                function (res) {
+
+                    Swal.fire('Berhasil!', res.message, 'success');
+
+                    $('#campaignMobileTable')
+                        .DataTable()
+                        .ajax.reload(null, false);
+
+                }
+            ).fail(function () {
+
+                Swal.fire(
+                    'Error!',
+                    'Gagal mengubah status testing',
+                    'error'
+                );
+
+            });
+
+        }
+
     });
 }
 </script>

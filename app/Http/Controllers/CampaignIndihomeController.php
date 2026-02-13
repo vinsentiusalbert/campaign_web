@@ -45,40 +45,77 @@ class CampaignIndihomeController extends Controller
                 }
                 return '<span class="badge badge-secondary">Not Active</span>';
             })
+            ->addColumn('status_testing', function ($row) {
+                if ($row->status_testing == 1) {
+                    return '<span class="badge badge-success">Active</span>';
+                }
+                return '<span class="badge badge-secondary">Not Active</span>';
+            })
             ->addColumn('aksi', function ($row) {
+
                 $edit = route('campaign-indihome.edit', $row->id);
                 $show = route('campaign-indihome.show', $row->id);
 
                 $buttons = '
                     <a href="'.$show.'" class="btn btn-info btn-sm">Lihat</a>
-                    <a href="'.$edit.'" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="'.$edit.'" class="btn btn-warning btn-sm ml-1">Edit</a>
                 ';
-                // tombol activate
+
+                // Activate Campaign
                 if (
                     in_array(Auth::user()->role, ['Admin', 'Super']) &&
                     $row->status == 0
                 ) {
-                    $activateUrl = route('campaign-indihome.activate', $row->id);
                     $buttons .= '
                         <button onclick="activateCampaign('.$row->id.')" 
-                                class="btn btn-primary btn-sm">
+                                class="btn btn-primary btn-sm ml-1">
                             Activate
                         </button>
                     ';
                 }
-                if (Auth::user()->role === 'Admin' || Auth::user()->role === 'Super') {
+
+                // Activate / Non Active Testing
+                if (in_array(Auth::user()->role, ['Admin', 'Super'])) {
+
+                    if ($row->status_testing == 1) {
+                        $buttons .= '
+                            <button onclick="toggleTesting('.$row->id.')" 
+                                    class="btn btn-outline-dark btn-sm ml-1">
+                                Non Active Testing
+                            </button>
+                        ';
+                    } else {
+                        $buttons .= '
+                            <button onclick="toggleTesting('.$row->id.')" 
+                                    class="btn btn-outline-info btn-sm ml-1">
+                                Activate Testing
+                            </button>
+                        ';
+                    }
+                }
+
+                // Download
+                if (in_array(Auth::user()->role, ['Admin', 'Super'])) {
                     $downloadUrl = route('campaign-indihome.download', $row->id);
                     $buttons .= '
-                        <a href="'.$downloadUrl.'" class="btn btn-success btn-sm">Download</a>
+                        <a href="'.$downloadUrl.'" 
+                        class="btn btn-success btn-sm ml-1">
+                            Download
+                        </a>
                     ';
                 }
 
+                // Delete
                 $buttons .= '
-                    <button onclick="deleteCampaign('.$row->id.')" class="btn btn-danger btn-sm">Hapus</button>
+                    <button onclick="deleteCampaign('.$row->id.')" 
+                            class="btn btn-danger btn-sm ml-1">
+                        Hapus
+                    </button>
                 ';
 
                 return $buttons;
             })
+
             ->editColumn('periode_campaign_start', function ($row) {
                 return $row->periode_campaign_start
                     ? date('d-m-Y H:i', strtotime($row->periode_campaign_start))
@@ -89,7 +126,7 @@ class CampaignIndihomeController extends Controller
                     ? date('d-m-Y H:i', strtotime($row->periode_campaign_end))
                     : '-';
             })
-            ->rawColumns(['aksi', 'status'])
+            ->rawColumns(['aksi', 'status', 'status_testing'])
             ->make(true);
     }
     /**
@@ -480,6 +517,24 @@ class CampaignIndihomeController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Campaign berhasil diaktifkan'
+        ]);
+    }
+    public function toggleTesting($id)
+    {
+        $campaign = CampaignIndihome::findOrFail($id);
+
+        // Optional: batasi hanya Admin & Super
+        if (!in_array(auth()->user()->role, ['Admin', 'Super'])) {
+            abort(403);
+        }
+
+        // Toggle value
+        $campaign->status_testing = $campaign->status_testing == 1 ? 0 : 1;
+        $campaign->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status testing berhasil diubah'
         ]);
     }
 
