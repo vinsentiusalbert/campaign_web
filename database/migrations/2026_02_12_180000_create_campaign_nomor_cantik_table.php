@@ -25,7 +25,12 @@ return new class extends Migration
             $table->text('kv_message_link')->nullable(); // Link GDrive KV Message
             $table->string('shortmax_user_type')->nullable();
 
+            $table->string('campaign_type')->nullable();
+            
             $table->string('nama_file_whitelist')->nullable();
+
+            $table->string('longitude_latitude')->nullable();
+            $table->string('radius')->nullable();
 
             $table->date('periode_campaign_start')->nullable();
             $table->date('periode_campaign_end')->nullable();
@@ -36,6 +41,7 @@ return new class extends Migration
 
             $table->string('nama_campaign')->nullable();
             $table->integer('status')->default(0);
+            $table->integer('status_testing')->default(0);
 
             $table->timestamps();
         });

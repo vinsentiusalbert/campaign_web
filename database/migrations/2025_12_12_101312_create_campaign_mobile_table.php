@@ -36,6 +36,7 @@ return new class extends Migration
 
             $table->string('nama_campaign')->nullable();
             $table->integer('status')->default(0);
+            $table->integer('status_testing')->default(0);
 
             $table->timestamps();
         });

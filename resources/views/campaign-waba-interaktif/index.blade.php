@@ -57,6 +57,7 @@
                         <th>Jumlah Blast</th>
                         {{-- <th>Radius</th> --}}
                         <th>Whitelist File</th>
+                        <th>Status Testing</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
@@ -100,6 +101,7 @@ $(document).ready(function () {
             { data: 'jumlah_blast', name: 'jumlah_blast' },
             // { data: 'radius', name: 'radius' },
             { data: 'nama_file_whitelist', name: 'nama_file_whitelist' },
+            { data: 'status_testing', name: 'status_testing' },
             { data: 'status', name: 'status' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
         ],
@@ -158,6 +160,46 @@ function activateCampaign(id) {
                 Swal.fire('Error!', 'Gagal activate campaign', 'error');
             });
         }
+    });
+}
+function toggleTesting(id) {
+
+    Swal.fire({
+        title: 'Ubah status testing?',
+        text: 'Status testing campaign akan diubah',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, ubah'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            $.post(
+                `/campaign-waba-interaktif/${id}/toggle-testing`,
+                {_token: '{{ csrf_token() }}'},
+                function (res) {
+
+                    Swal.fire('Berhasil!', res.message, 'success');
+
+                    $('#CampaignWabaInteraktifTable')
+                        .DataTable()
+                        .ajax.reload(null, false);
+
+                }
+            ).fail(function () {
+
+                Swal.fire(
+                    'Error!',
+                    'Gagal mengubah status testing',
+                    'error'
+                );
+
+            });
+
+        }
+
     });
 }
 </script>
