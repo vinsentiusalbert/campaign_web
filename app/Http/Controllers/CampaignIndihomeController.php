@@ -170,15 +170,15 @@ class CampaignIndihomeController extends Controller
             'nama_template' => 'nullable|string|max:255',
 
             'carousel_product_1' => 'nullable|string|max:255',
-            'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
-            'kv_product_2' => 'nullable|string',
             'carousel_product_3' => 'nullable|string|max:255',
-            'kv_product_3' => 'nullable|string',
             'carousel_product_4' => 'nullable|string|max:255',
-            'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
-            'kv_product_5' => 'nullable|string',
+            'kv_product_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_2' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_3' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_5' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
@@ -221,6 +221,21 @@ class CampaignIndihomeController extends Controller
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
         }
+        // 🔹 KV Product 1 - 5
+        for ($i = 1; $i <= 5; $i++) {
+
+            if ($request->hasFile("kv_product_$i")) {
+
+                $file = $request->file("kv_product_$i");
+
+                $fileName = uniqid() . "_kv{$i}." . $file->getClientOriginalExtension();
+
+                $file->storeAs('campaign/kv-product', $fileName, 'public');
+
+                // Simpan hanya nama file
+                $validated["kv_product_$i"] = $fileName;
+            }
+        }
         /* ===============================
         | SAVE DATA
         =============================== */
@@ -260,100 +275,72 @@ class CampaignIndihomeController extends Controller
     public function update(Request $request, CampaignIndihome $campaignIndihome)
     {
         $this->ensureCampaignAccess($campaignIndihome);
+
+        // VALIDASI
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
             'branch' => 'nullable|string|max:255',
-
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
-
-            // IMAGE
             'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-
             'campaign_type' => 'required|in:Broadcast,LBA',
-
-            // EXCEL
             'file_whitelist' => 'nullable|mimes:xls,xlsx|max:5120',
-
             'longitude_latitude' => 'nullable|string|max:255',
             'radius' => 'nullable|string|max:255',
-
             'periode_campaign_start' => 'nullable|date',
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
-
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
-
+            'cc' => 'nullable|file|mimes:xls,xlsx|max:5120',
+            // KV Product Images
+            'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_2' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_3' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_5' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // Carousel text
             'carousel_product_1' => 'nullable|string|max:255',
-            'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
-            'kv_product_2' => 'nullable|string',
             'carousel_product_3' => 'nullable|string|max:255',
-            'kv_product_3' => 'nullable|string',
             'carousel_product_4' => 'nullable|string|max:255',
-            'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
-            'kv_product_5' => 'nullable|string',
-
-            // ✅ CC FILE (EXCEL)
-            'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
+
+        // HANDLE TYPE
         if ($validated['campaign_type'] === 'LBA') {
-
-            // 🔴 LBA → whitelist harus NULL
             if ($campaignIndihome->nama_file_whitelist) {
-                Storage::disk('public')
-                    ->delete('campaign/whitelist/' . $campaignIndihome->nama_file_whitelist);
+                Storage::disk('public')->delete('campaign/whitelist/'.$campaignIndihome->nama_file_whitelist);
             }
-
             $validated['nama_file_whitelist'] = null;
-
         } elseif ($validated['campaign_type'] === 'Broadcast') {
-
-            // 🔴 Broadcast → LBA data harus NULL
             $validated['longitude_latitude'] = null;
             $validated['radius'] = null;
         }
-        /* ===============================
-        | KV MESSAGE IMAGE
-        =============================== */
+
+        // =========================
+        // KV MESSAGE IMAGE
+        // =========================
         if ($request->hasFile('kv_message_image')) {
-
-            // delete old image
-            if ($campaignIndihome->kv_message_image) {
-                Storage::disk('public')->delete(
-                    'campaign/kv-message/'.$campaignIndihome->kv_message_image
-                );
+            if ($campaignIndihome->kv_message_link) {
+                Storage::disk('public')->delete('campaign/kv-message/'.$campaignIndihome->kv_message_link);
             }
-
             $image = $request->file('kv_message_image');
             $imageName = time().'_'.$image->getClientOriginalName();
-
             $image->storeAs('campaign/kv-message', $imageName, 'public');
-
-            // save only name
             $validated['kv_message_link'] = $imageName;
         }
 
-        /* ===============================
-        | WHITELIST FILE
-        =============================== */
+        // =========================
+        // WHITELIST FILE
+        // =========================
         if ($request->hasFile('file_whitelist')) {
-
-            // delete old file
-            if ($campaignIndihome->file_whitelist) {
-                Storage::disk('public')->delete(
-                    'campaign/whitelist/'.$campaignIndihome->file_whitelist
-                );
+            if ($campaignIndihome->nama_file_whitelist) {
+                Storage::disk('public')->delete('campaign/whitelist/'.$campaignIndihome->nama_file_whitelist);
             }
-
             $file = $request->file('file_whitelist');
             $fileName = time().'_'.$file->getClientOriginalName();
-
             $file->storeAs('campaign/whitelist', $fileName, 'public');
-
-            // save only name
             $validated['nama_file_whitelist'] = $fileName;
         }
 
@@ -361,28 +348,40 @@ class CampaignIndihomeController extends Controller
         // CC FILE
         // =========================
         if ($request->hasFile('cc')) {
-
             if ($campaignIndihome->cc) {
-                Storage::disk('public')->delete(
-                    'campaign/cc/' . $campaignIndihome->cc
-                );
+                Storage::disk('public')->delete('campaign/cc/'.$campaignIndihome->cc);
             }
-
             $ccFile = $request->file('cc');
-            $ccFileName = time() . '_' . $ccFile->getClientOriginalName();
-
+            $ccFileName = time().'_'.$ccFile->getClientOriginalName();
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
         }
 
-        /* ===============================
-        | UPDATE DATA
-        =============================== */
+        // =========================
+        // KV PRODUCT IMAGES
+        // =========================
+        for ($i = 1; $i <= 5; $i++) {
+            $field = 'kv_product_image_'.$i;
+            $dbField = 'kv_product_'.$i;
+
+            if ($request->hasFile($field)) {
+                // Delete old
+                if ($campaignIndihome->{$dbField}) {
+                    Storage::disk('public')->delete('campaign/kv-product/'.$campaignIndihome->{$dbField});
+                }
+                $file = $request->file($field);
+                $fileName = time().'_'.$i.'_'.$file->getClientOriginalName();
+                $file->storeAs('campaign/kv-product', $fileName, 'public');
+                $validated[$dbField] = $fileName;
+            }
+        }
+
+        // =========================
+        // UPDATE DATABASE
+        // =========================
         $campaignIndihome->update($validated);
 
-        return redirect()
-            ->route('campaign-indihome.index')
-            ->with('success', 'Campaign Indihome berhasil diperbarui!');
+        return redirect()->route('campaign-indihome.index')->with('success', 'Campaign Indihome berhasil diperbarui!');
     }
 
 
@@ -408,6 +407,10 @@ class CampaignIndihomeController extends Controller
         $this->ensureCampaignAccess($campaign);
 
         $tempPath = storage_path('app/public/temp');
+        if (!file_exists($tempPath)) {
+            mkdir($tempPath, 0755, true);
+        }
+
         $zipFileName = 'campaign_'.$campaign->id.'.zip';
         $zipPath = $tempPath.'/'.$zipFileName;
 
@@ -424,20 +427,14 @@ class CampaignIndihomeController extends Controller
          */
         $csvData = [];
         $csvData[] = [
-            'Area','Region','Branch','Campaign Usecase', 'Message Body','Campaign Type',
-            'Message Body','User Type',
-            'Periode Start','Periode End',
-            'Jumlah Blast','Nama Campaign',
-            'carousel_product_1',
-            'kv_product_1',
-            'carousel_product_2',
-            'kv_product_2',
-            'carousel_product_3',
-            'kv_product_3',
-            'carousel_product_4',
-            'kv_product_4',
-            'carousel_product_5',
-            'kv_product_5',
+            'Area','Region','Branch','Campaign Usecase','Message Body','Campaign Type',
+            'Message Body (Plain)','User Type',
+            'Periode Start','Periode End','Jumlah Blast','Nama Campaign',
+            'carousel_product_1','kv_product_1',
+            'carousel_product_2','kv_product_2',
+            'carousel_product_3','kv_product_3',
+            'carousel_product_4','kv_product_4',
+            'carousel_product_5','kv_product_5',
         ];
 
         $csvData[] = [
@@ -453,7 +450,16 @@ class CampaignIndihomeController extends Controller
             $campaign->periode_campaign_end,
             $campaign->jumlah_blast,
             $campaign->nama_template,
-            $campaign
+            $campaign->carousel_product_1,
+            $campaign->kv_product_1,
+            $campaign->carousel_product_2,
+            $campaign->kv_product_2,
+            $campaign->carousel_product_3,
+            $campaign->kv_product_3,
+            $campaign->carousel_product_4,
+            $campaign->kv_product_4,
+            $campaign->carousel_product_5,
+            $campaign->kv_product_5,
         ];
 
         $csvString = '';
@@ -465,33 +471,36 @@ class CampaignIndihomeController extends Controller
 
         /**
          * ==========================
-         * ADD ATTACHMENTS (SAFE)
+         * ADD ATTACHMENTS
          * ==========================
          */
         $attachments = [
-            'KV_Image' => $campaign->kv_message_link
-                ? 'campaign/kv-message/'.$campaign->kv_message_link
-                : null,
-
-            'Whitelist' => $campaign->nama_file_whitelist
-                ? 'campaign/whitelist/'.$campaign->nama_file_whitelist
-                : null,
-
-            'CC' => $campaign->cc
-                ? 'campaign/cc/'.$campaign->cc
-                : null,
+            'KV_Message' => $campaign->kv_message_link ? 'campaign/kv-message/'.$campaign->kv_message_link : null,
+            'Whitelist' => $campaign->nama_file_whitelist ? 'campaign/whitelist/'.$campaign->nama_file_whitelist : null,
+            'CC' => $campaign->cc ? 'campaign/cc/'.$campaign->cc : null,
         ];
 
         foreach ($attachments as $folder => $relativePath) {
-
-            if (!$relativePath) {
-                continue;
-            }
-
+            if (!$relativePath) continue;
             if (Storage::disk('public')->exists($relativePath)) {
                 $zip->addFile(
                     storage_path('app/public/'.$relativePath),
                     $folder.'/'.basename($relativePath)
+                );
+            }
+        }
+
+        /**
+         * ==========================
+         * ADD KV PRODUCT IMAGES
+         * ==========================
+         */
+        for ($i = 1; $i <= 5; $i++) {
+            $kvFile = $campaign->{'kv_product_'.$i};
+            if ($kvFile && Storage::disk('public')->exists('campaign/kv-product/'.$kvFile)) {
+                $zip->addFile(
+                    storage_path('app/public/campaign/kv-product/'.$kvFile),
+                    'KV_Product_'.$i.'/'.basename($kvFile)
                 );
             }
         }

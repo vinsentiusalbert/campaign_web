@@ -217,7 +217,12 @@
 
                 <div class="form-group col-md-4">
                     <label>KV Product {{ $i }}</label>
-                    <textarea name="kv_product_{{ $i }}" class="form-control"></textarea>
+                    <input 
+                        type="file" 
+                        name="kv_product_{{ $i }}" 
+                        class="form-control-file"
+                        accept="image/*">
+                    <small class="text-muted">Format: JPG, PNG, JPEG (Max 2MB)</small>
                 </div>
             </div>
             <hr>

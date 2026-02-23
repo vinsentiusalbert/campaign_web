@@ -232,11 +232,15 @@
                             {{ old('carousel_product_'.$i, $campaign->{'carousel_product_'.$i}) }}
                         </textarea>
                     </div>
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-md-6">
                         <label>KV Product {{ $i }}</label>
-                        <textarea name="kv_product_{{ $i }}" class="form-control">
-                            {{ old('kv_product_'.$i, $campaign->{'kv_product_'.$i}) }}
-                        </textarea>
+                        <input type="file" name="kv_product_image_{{ $i }}" class="form-control" accept="image/*">
+                        @php $kvImage = $campaign->{'kv_product_'.$i}; @endphp
+                        @if($kvImage)
+                            <div class="image-preview mt-2">
+                                <img src="{{ asset('storage/campaign/kv-product/'.$kvImage) }}" alt="KV Product {{ $i }}" onclick="previewImage(this.src)">
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <hr>
