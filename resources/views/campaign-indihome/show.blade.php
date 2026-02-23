@@ -139,7 +139,7 @@
         <div class="form-group">
             <label>CC File</label>
             @if($campaign->cc)
-                <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">{{ basename($campaign->cc) }}</a>
+                <a href="{{ asset('storage/campaign/cc/'.$campaign->cc) }}" target="_blank">{{ basename($campaign->cc) }}</a>
             @else
                 <span class="text-muted">-</span>
             @endif

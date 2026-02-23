@@ -138,7 +138,7 @@
             <div class="detail-label">No CC</div>
             <div class="detail-box">
                 @if($campaign->cc)
-                    <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">
+                    <a href="{{ asset('storage/campaign/cc/'.$campaign->cc) }}" target="_blank">
                         {{ basename($campaign->cc) }}
                     </a>
                 @else
