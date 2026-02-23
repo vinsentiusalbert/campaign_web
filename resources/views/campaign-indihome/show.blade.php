@@ -17,6 +17,12 @@
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .preview-image:hover {
+        transform: scale(1.05);
+        border-color: #007bff;
     }
 </style>
 @endsection
@@ -68,13 +74,10 @@
         {{-- KV MESSAGE IMAGE --}}
         <div class="form-group">
             <label>KV (Key-Visual) Message</label>
-            {{$campaign->kv_message_link}}
             @if($campaign->kv_message_link)
-                <input type="text" class="form-control" value="{{ $campaign->kv_message_link }}" readonly>
-                <div class="mb-2">
-                    <img src="{{ asset('storage/campaign/kv-message/'.$campaign->kv_message_link) }}" 
-                         alt="KV Message" class="preview-image">
-                </div>
+                <input type="text" class="form-control mb-2" value="{{ $campaign->kv_message_link }}" readonly>
+                <img src="{{ asset('storage/campaign/kv-message/'.$campaign->kv_message_link) }}" 
+                     alt="KV Message" class="preview-image" onclick="previewImage(this.src)">
             @else
                 <input type="text" class="form-control" value="-" readonly>
             @endif
@@ -84,13 +87,11 @@
         <div class="form-group">
             <label>Whitelist File (Excel)</label>
             @if($campaign->nama_file_whitelist)
-                <input type="text" class="form-control" value="{{ $campaign->nama_file_whitelist }}" readonly>
-                <div class="mb-2">
-                    <a href="{{ asset('storage/campaign/whitelist/'.$campaign->nama_file_whitelist) }}" 
-                       class="btn btn-sm btn-outline-primary" target="_blank">
-                        Download {{ $campaign->nama_file_whitelist }}
-                    </a>
-                </div>
+                <input type="text" class="form-control mb-2" value="{{ $campaign->nama_file_whitelist }}" readonly>
+                <a href="{{ asset('storage/campaign/whitelist/'.$campaign->nama_file_whitelist) }}" 
+                   class="btn btn-sm btn-outline-primary" target="_blank">
+                    Download {{ $campaign->nama_file_whitelist }}
+                </a>
             @else
                 <input type="text" class="form-control" value="-" readonly>
             @endif
@@ -99,13 +100,13 @@
         {{-- LONG LAT --}}
         <div class="form-group">
             <label>Longitude & Latitude</label>
-            <input type="text" class="form-control" value="{{ $campaign->longitude_latitude }}" readonly>
+            <input type="text" class="form-control" value="{{ $campaign->longitude_latitude ?? '-' }}" readonly>
         </div>
 
         {{-- RADIUS --}}
         <div class="form-group">
             <label>Radius</label>
-            <input type="text" class="form-control" value="{{ $campaign->radius }}" readonly>
+            <input type="text" class="form-control" value="{{ $campaign->radius ?? '-' }}" readonly>
         </div>
 
         {{-- PERIODE --}}
@@ -133,33 +134,58 @@
             <label>Jumlah Blast</label>
             <input type="number" class="form-control" value="{{ $campaign->jumlah_blast }}" readonly>
         </div>
-        {{-- CC --}}
-        <div>
-            <div class="detail-label">No CC</div>
-            <div class="detail-box">
-                @if($campaign->cc)
-                    <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">
-                        {{ basename($campaign->cc) }}
-                    </a>
-                @else
-                    -
-                @endif
-            </div>
-        </div>
-        <hr>
-        {{-- CAROUSEL PRODUCT --}}
-        @for($i = 1; $i <= 5; $i++)
-            <div class="form-group">
-                <label>Carousel Product {{ $i }}</label>
-                <input type="text" class="form-control" value="{{ $campaign->{'carousel_product_'.$i} }}" readonly>
-            </div>
-            <div class="form-group">
-                <label>KV Product {{ $i }}</label>
-                <input type="text" class="form-control" value="{{ $campaign->{'kv_product_'.$i} }}" readonly>
-            </div>
-        @endfor
 
-        {{-- ACTION --}}
+        {{-- CC FILE --}}
+        <div class="form-group">
+            <label>CC File</label>
+            @if($campaign->cc)
+                <a href="{{ asset('storage/'.$campaign->cc) }}" target="_blank">{{ basename($campaign->cc) }}</a>
+            @else
+                <span class="text-muted">-</span>
+            @endif
+        </div>
+
+        {{-- CAROUSEL PRODUCT + KV --}}
+        <hr>
+        <h5 class="mb-3">Carousel Products</h5>
+        <div class="row">
+            @php $hasCarousel = false; @endphp
+            @for($i = 1; $i <= 5; $i++)
+                @php
+                    $productName = $campaign->{'carousel_product_'.$i};
+                    $productImage = $campaign->{'kv_product_'.$i};
+                @endphp
+
+                @if($productName || $productImage)
+                    @php $hasCarousel = true; @endphp
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <h6 class="font-weight-bold">Product {{ $i }}</h6>
+                                <p class="text-muted">{{ $productName ?? '-' }}</p>
+                                @if($productImage)
+                                    <img 
+                                        src="{{ asset('storage/campaign/kv-product/'.$productImage) }}"
+                                        class="img-fluid rounded preview-image"
+                                        style="max-height:200px"
+                                        onclick="previewImage(this.src)">
+                                @else
+                                    <p class="text-muted small">Tidak ada gambar</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endfor
+
+            @if(!$hasCarousel)
+                <div class="col-12">
+                    <p class="text-muted">Tidak ada carousel product</p>
+                </div>
+            @endif
+        </div>
+
+        {{-- ACTION BUTTON --}}
         <div class="form-group d-flex gap-2 mt-3">
             <a href="{{ route('campaign-indihome.index') }}" class="btn btn-secondary flex-grow-1 m-1">
                 Kembali
@@ -171,4 +197,19 @@
 
     </div>
 </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function previewImage(url) {
+    Swal.fire({
+        imageUrl: url,
+        imageAlt: 'Preview',
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: 700
+    });
+}
+</script>
 @endsection

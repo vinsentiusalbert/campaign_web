@@ -147,17 +147,45 @@
             </div>
         </div>
         <hr>
-        {{-- CAROUSEL PRODUCT --}}
-        @for($i = 1; $i <= 5; $i++)
-            <div class="form-group">
-                <label>Carousel Product {{ $i }}</label>
-                <input type="text" class="form-control" value="{{ $campaign->{'carousel_product_'.$i} }}" readonly>
-            </div>
-            <div class="form-group">
-                <label>KV Product {{ $i }}</label>
-                <input type="text" class="form-control" value="{{ $campaign->{'kv_product_'.$i} }}" readonly>
-            </div>
-        @endfor
+        {{-- CAROUSEL PRODUCT + KV --}}
+        <hr>
+        <h5 class="mb-3">Carousel Products</h5>
+        <div class="row">
+            @php $hasCarousel = false; @endphp
+            @for($i = 1; $i <= 5; $i++)
+                @php
+                    $productName = $campaign->{'carousel_product_'.$i};
+                    $productImage = $campaign->{'kv_product_'.$i};
+                @endphp
+
+                @if($productName || $productImage)
+                    @php $hasCarousel = true; @endphp
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <h6 class="font-weight-bold">Product {{ $i }}</h6>
+                                <p class="text-muted">{{ $productName ?? '-' }}</p>
+                                @if($productImage)
+                                    <img 
+                                        src="{{ asset('storage/campaign/kv-product/'.$productImage) }}"
+                                        class="img-fluid rounded preview-image"
+                                        style="max-height:200px"
+                                        onclick="previewImage(this.src)">
+                                @else
+                                    <p class="text-muted small">Tidak ada gambar</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endfor
+
+            @if(!$hasCarousel)
+                <div class="col-12">
+                    <p class="text-muted">Tidak ada carousel product</p>
+                </div>
+            @endif
+        </div>
 
         {{-- ACTION --}}
         <div class="form-group d-flex gap-2 mt-3">
@@ -173,3 +201,17 @@
 </div>
 @endsection
 
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function previewImage(url) {
+    Swal.fire({
+        imageUrl: url,
+        imageAlt: 'Preview',
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: 700
+    });
+}
+</script>
+@endsection

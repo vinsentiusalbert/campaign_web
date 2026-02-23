@@ -157,16 +157,19 @@ class CampaignOrbitController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
 
+            
+            // KV Product Images
+            'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_2' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_3' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_5' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // Carousel text
             'carousel_product_1' => 'nullable|string|max:255',
-            'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
-            'kv_product_2' => 'nullable|string',
             'carousel_product_3' => 'nullable|string|max:255',
-            'kv_product_3' => 'nullable|string',
             'carousel_product_4' => 'nullable|string|max:255',
-            'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
-            'kv_product_5' => 'nullable|string',
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
@@ -208,6 +211,21 @@ class CampaignOrbitController extends Controller
 
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
+        }
+        // 🔹 KV Product 1 - 5
+        for ($i = 1; $i <= 5; $i++) {
+
+            if ($request->hasFile("kv_product_$i")) {
+
+                $file = $request->file("kv_product_$i");
+
+                $fileName = uniqid() . "_orbit_kv{$i}." . $file->getClientOriginalExtension();
+
+                $file->storeAs('campaign/kv-product', $fileName, 'public');
+
+                // Simpan hanya nama file
+                $validated["kv_product_$i"] = $fileName;
+            }
         }
         /* ===============================
         | SAVE DATA
@@ -273,16 +291,19 @@ class CampaignOrbitController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
 
+            
+            // KV Product Images
+            'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_2' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_3' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kv_product_image_5' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // Carousel text
             'carousel_product_1' => 'nullable|string|max:255',
-            'kv_product_1' => 'nullable|string',
             'carousel_product_2' => 'nullable|string|max:255',
-            'kv_product_2' => 'nullable|string',
             'carousel_product_3' => 'nullable|string|max:255',
-            'kv_product_3' => 'nullable|string',
             'carousel_product_4' => 'nullable|string|max:255',
-            'kv_product_4' => 'nullable|string',
             'carousel_product_5' => 'nullable|string|max:255',
-            'kv_product_5' => 'nullable|string',
 
             // ✅ CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
@@ -362,7 +383,24 @@ class CampaignOrbitController extends Controller
             $ccFile->storeAs('campaign/cc', $ccFileName, 'public');
             $validated['cc'] = $ccFileName;
         }
+        // =========================
+        // KV PRODUCT IMAGES
+        // =========================
+        for ($i = 1; $i <= 5; $i++) {
+            $field = 'kv_product_image_'.$i;
+            $dbField = 'kv_product_'.$i;
 
+            if ($request->hasFile($field)) {
+                // Delete old
+                if ($campaignOrbit->{$dbField}) {
+                    Storage::disk('public')->delete('campaign/kv-product/'.$campaignOrbit->{$dbField});
+                }
+                $file = $request->file($field);
+                $fileName = time().'_'.$i.'_'.$file->getClientOriginalName();
+                $file->storeAs('campaign/kv-product', $fileName, 'public');
+                $validated[$dbField] = $fileName;
+            }
+        }
         /* ===============================
         | UPDATE DATA
         =============================== */
@@ -396,6 +434,10 @@ class CampaignOrbitController extends Controller
         $this->ensureCampaignAccess($campaign);
 
         $tempPath = storage_path('app/public/temp');
+        if (!file_exists($tempPath)) {
+            mkdir($tempPath, 0755, true);
+        }
+
         $zipFileName = 'campaign_'.$campaign->id.'.zip';
         $zipPath = $tempPath.'/'.$zipFileName;
 
@@ -412,20 +454,14 @@ class CampaignOrbitController extends Controller
          */
         $csvData = [];
         $csvData[] = [
-            'Area','Region','Branch','Campaign Usecase', 'Message Body','Campaign Type',
-            'Message Body','User Type',
-            'Periode Start','Periode End',
-            'Jumlah Blast','Nama Campaign',
-            'carousel_product_1',
-            'kv_product_1',
-            'carousel_product_2',
-            'kv_product_2',
-            'carousel_product_3',
-            'kv_product_3',
-            'carousel_product_4',
-            'kv_product_4',
-            'carousel_product_5',
-            'kv_product_5',
+            'Area','Region','Branch','Campaign Usecase','Message Body','Campaign Type',
+            'Message Body (Plain)','User Type',
+            'Periode Start','Periode End','Jumlah Blast','Nama Campaign',
+            'carousel_product_1','kv_product_1',
+            'carousel_product_2','kv_product_2',
+            'carousel_product_3','kv_product_3',
+            'carousel_product_4','kv_product_4',
+            'carousel_product_5','kv_product_5',
         ];
 
         $csvData[] = [
@@ -441,7 +477,16 @@ class CampaignOrbitController extends Controller
             $campaign->periode_campaign_end,
             $campaign->jumlah_blast,
             $campaign->nama_template,
-            $campaign
+            $campaign->carousel_product_1,
+            $campaign->kv_product_1,
+            $campaign->carousel_product_2,
+            $campaign->kv_product_2,
+            $campaign->carousel_product_3,
+            $campaign->kv_product_3,
+            $campaign->carousel_product_4,
+            $campaign->kv_product_4,
+            $campaign->carousel_product_5,
+            $campaign->kv_product_5,
         ];
 
         $csvString = '';
@@ -453,33 +498,36 @@ class CampaignOrbitController extends Controller
 
         /**
          * ==========================
-         * ADD ATTACHMENTS (SAFE)
+         * ADD ATTACHMENTS
          * ==========================
          */
         $attachments = [
-            'KV_Image' => $campaign->kv_message_link
-                ? 'campaign/kv-message/'.$campaign->kv_message_link
-                : null,
-
-            'Whitelist' => $campaign->nama_file_whitelist
-                ? 'campaign/whitelist/'.$campaign->nama_file_whitelist
-                : null,
-
-            'CC' => $campaign->cc
-                ? 'campaign/cc/'.$campaign->cc
-                : null,
+            'KV_Message' => $campaign->kv_message_link ? 'campaign/kv-message/'.$campaign->kv_message_link : null,
+            'Whitelist' => $campaign->nama_file_whitelist ? 'campaign/whitelist/'.$campaign->nama_file_whitelist : null,
+            'CC' => $campaign->cc ? 'campaign/cc/'.$campaign->cc : null,
         ];
 
         foreach ($attachments as $folder => $relativePath) {
-
-            if (!$relativePath) {
-                continue;
-            }
-
+            if (!$relativePath) continue;
             if (Storage::disk('public')->exists($relativePath)) {
                 $zip->addFile(
                     storage_path('app/public/'.$relativePath),
                     $folder.'/'.basename($relativePath)
+                );
+            }
+        }
+
+        /**
+         * ==========================
+         * ADD KV PRODUCT IMAGES
+         * ==========================
+         */
+        for ($i = 1; $i <= 5; $i++) {
+            $kvFile = $campaign->{'kv_product_'.$i};
+            if ($kvFile && Storage::disk('public')->exists('campaign/kv-product/'.$kvFile)) {
+                $zip->addFile(
+                    storage_path('app/public/campaign/kv-product/'.$kvFile),
+                    'KV_Product_'.$i.'/'.basename($kvFile)
                 );
             }
         }
