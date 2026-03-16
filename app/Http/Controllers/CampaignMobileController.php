@@ -30,9 +30,11 @@ class CampaignMobileController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignMobile::query();
+        $query = CampaignMobile::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_mobile.user_id')
+            ->select('campaign_mobile.*', 'users.vendor as vendor');
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_mobile.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -499,3 +501,4 @@ class CampaignMobileController extends Controller
         ]);
     }
 }
+

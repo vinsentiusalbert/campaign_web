@@ -31,11 +31,13 @@ class CampaignSoundboxController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignSoundbox::query();
+        $query = CampaignSoundbox::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_soundbox.user_id')
+            ->select('campaign_soundbox.*', 'users.vendor as vendor');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_soundbox.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -573,5 +575,6 @@ class CampaignSoundboxController extends Controller
     }
 
 }
+
 
 

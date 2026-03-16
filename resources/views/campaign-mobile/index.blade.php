@@ -43,6 +43,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Vendor</th>
                         <th>Area</th>
                         <th>Region</th>
                         <th>Branch</th>
@@ -82,6 +83,7 @@ $(document).ready(function() {
         ajax: "{{ route('campaign-mobile.data') }}",
         columns: [
             { data: 'id', name: 'id' },
+            { data: 'vendor', name: 'vendor' },
             { data: 'area', name: 'area' },
             { data: 'region', name: 'region' },
             { data: 'branch', name: 'branch' },
@@ -196,3 +198,4 @@ function toggleTesting(id) {
 }
 </script>
 @endsection
+

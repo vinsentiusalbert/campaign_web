@@ -26,7 +26,7 @@ class UserController extends Controller
     {
         $data = DB::table('users')
             ->where('status', 'Aktif')
-            ->select('id', 'name', 'email', 'nohp', 'status', 'role', 'created_at')
+            ->select('id', 'name', 'email', 'nohp', 'status', 'role', 'vendor', 'created_at')
             ->orderByDesc('created_at');
 
         return datatables()->of($data)
@@ -46,7 +46,8 @@ class UserController extends Controller
             'name'  => 'required',
             'nohp'  => 'required',
             'email' => 'required|email|unique:users,email',
-            'role'  => 'required'
+            'role'  => 'required',
+            'vendor' => 'required'
         ]);
 
         DB::table('users')->insert([
@@ -54,6 +55,7 @@ class UserController extends Controller
             'nohp' => $request->nohp,
             'email' => $request->email,
             'role' => $request->role,
+            'vendor' => $request->vendor,
             'password' => bcrypt('123456'), // default
             'status' => 'Aktif',
             'created_at' => now()
@@ -80,6 +82,7 @@ class UserController extends Controller
             'nohp'  => 'required',
             'email' => 'required|email|unique:users,email,' . $id,
             'role'  => 'required',
+            'vendor' => 'required',
         ]);
 
         $data = [
@@ -87,6 +90,7 @@ class UserController extends Controller
             'nohp' => $request->nohp,
             'email' => $request->email,
             'role' => $request->role,
+            'vendor' => $request->vendor,
             'updated_at' => now()
         ];
 
@@ -104,3 +108,10 @@ class UserController extends Controller
         return response()->json(['message' => 'User berhasil di-nonaktifkan']);
     }
 }
+
+
+
+
+
+
+
