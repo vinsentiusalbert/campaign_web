@@ -143,6 +143,7 @@
                             <th class="text-center">Email</th>
                             <th class="text-center">No HP</th>
                             <th class="text-center">Role</th>
+                            <th class="text-center">Vendor</th>
                             <th class="text-center">Treg</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Tanggal<br>Dibuat</th>
@@ -202,7 +203,16 @@
                             <option value="Tsel">Tsel</option>
                             <option value="User">User</option>
                         </select>
+                    </div>                    <div class="form-group">
+                        <label for="vendor">Vendor <span class="text-danger">*</span></label>
+                        <select class="form-control" id="vendor" name="vendor" required>
+                            <option value="">Pilih Vendor</option>
+                            <option value="Mitra SBP">Mitra SBP</option>
+                            <option value="Internal">Internal</option>
+                            <option value="External">External</option>
+                        </select>
                     </div>
+
                     
                     {{-- <div class="form-group" id="treg_group" style="display: none;">
                         <label for="treg_id">Treg <span class="text-danger">*</span></label>
@@ -301,6 +311,11 @@
                         }
                         return `<div style="text-align: center;"><span class="badge ${badgeClass}">${data}</span></div>`;
                     }
+                },                {
+                    data: 'vendor',
+                    name: 'vendor',
+                    orderable: true,
+                    render: data => `<div style="text-align: center;">${data || '-'}</div>`
                 },
                 {
                     data: 'treg_name',
@@ -435,6 +450,7 @@
                     $('#role').val(user.role);
                     
                     
+                    $('#vendor').val(user.vendor);
                 },
                 error: function(xhr) {
                     alert('Gagal mengambil data user');
@@ -480,3 +496,9 @@
 </script>
 
 @endsection
+
+
+
+
+
+

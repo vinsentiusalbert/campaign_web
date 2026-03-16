@@ -30,9 +30,11 @@ class CampaignNomorCantikController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignNomorCantik::query();
+        $query = CampaignNomorCantik::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_nomor_cantik.user_id')
+            ->select('campaign_nomor_cantik.*', 'users.vendor as vendor');
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_nomor_cantik.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -494,4 +496,5 @@ class CampaignNomorCantikController extends Controller
         ]);
     }
 }
+
 

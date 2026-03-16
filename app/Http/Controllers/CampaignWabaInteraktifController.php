@@ -34,11 +34,13 @@ class CampaignWabaInteraktifController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignWabaInteraktif::query();
+        $query = CampaignWabaInteraktif::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_waba_interaktif.user_id')
+            ->select('campaign_waba_interaktif.*', 'users.vendor as vendor');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_waba_interaktif.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -575,4 +577,5 @@ class CampaignWabaInteraktifController extends Controller
         ]);
     }
 }
+
 

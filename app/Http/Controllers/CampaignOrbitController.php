@@ -31,11 +31,13 @@ class CampaignOrbitController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignOrbit::query();
+        $query = CampaignOrbit::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_orbit.user_id')
+            ->select('campaign_orbit.*', 'users.vendor as vendor');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_orbit.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -575,4 +577,5 @@ class CampaignOrbitController extends Controller
     }
 
 }
+
 

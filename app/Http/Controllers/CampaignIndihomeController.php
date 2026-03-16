@@ -31,11 +31,13 @@ class CampaignIndihomeController extends Controller
     }
     public function data(Request $request)
     {
-        $query = CampaignIndihome::query();
+        $query = CampaignIndihome::query()
+            ->leftJoin('users', 'users.id', '=', 'campaign_indihome.user_id')
+            ->select('campaign_indihome.*', 'users.vendor as vendor');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
-            $query->where('user_id', auth()->id());
+            $query->where('campaign_indihome.user_id', auth()->id());
         }
 
         return DataTables::of($query)
@@ -548,3 +550,4 @@ class CampaignIndihomeController extends Controller
     }
 
 }
+
