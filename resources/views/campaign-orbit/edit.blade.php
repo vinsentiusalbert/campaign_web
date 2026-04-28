@@ -36,6 +36,14 @@
 
         <div class="card-body">
 
+            @if(in_array(auth()->user()->role, ['Admin', 'Super']))
+            <div class="form-group">
+                <label for="template_name">Nama Template</label>
+                <input type="text" id="template_name" name="template_name" class="form-control" value="{{ old('template_name', $campaign->template_name) }}">
+                @error('template_name') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+            @endif
+
             {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
@@ -190,13 +198,6 @@
                        value="{{ old('jumlah_blast', $campaign->jumlah_blast) }}">
             </div>
 
-            {{-- TEMPLATE --}}
-            <div class="form-group" style="display: none; ">
-                <label>Nama Template</label>
-                <input type="text" name="nama_template" class="form-control"
-                       value="{{ old('nama_template', $campaign->nama_template) }}">
-            </div>
-            
             {{-- CC --}}
             <div class="form-group">
                 <label>No CC (Excel)</label>
@@ -355,4 +356,3 @@ $(document).ready(function () {
 });
 </script>
 @endsection
-

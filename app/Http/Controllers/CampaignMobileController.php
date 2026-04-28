@@ -124,6 +124,8 @@ class CampaignMobileController extends Controller
      */
     public function store(Request $request)
     {
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+
         // Validasi data
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
@@ -152,8 +154,13 @@ class CampaignMobileController extends Controller
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
+            'template_name' => 'nullable|string|max:255',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
+
+        if (! $isPrivileged) {
+            unset($validated['template_name']);
+        }
 
         $validated['user_id'] = auth()->id();
         $validated['status'] = 0;
@@ -235,6 +242,7 @@ class CampaignMobileController extends Controller
     {
         $campaign = CampaignMobile::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // Validasi data
         $validated = $request->validate([
@@ -264,8 +272,13 @@ class CampaignMobileController extends Controller
             // ✅ CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
+            'template_name' => 'nullable|string|max:255',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
+
+        if (! $isPrivileged) {
+            unset($validated['template_name']);
+        }
 
         if ($validated['campaign_type'] === 'LBA') {
             if ($campaign->nama_file_whitelist) {

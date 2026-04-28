@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('campaign_nomor_cantik', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
+            $table->string('template_name')->nullable();
             $table->string('area')->nullable();
             $table->string('region')->nullable();
             $table->string('branch')->nullable();
@@ -55,4 +56,3 @@ return new class extends Migration
         Schema::dropIfExists('campaign_nomor_cantik');
     }
 };
-

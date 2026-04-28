@@ -59,6 +59,11 @@
             <input type="text" class="form-control" value="{{ $campaign->campaign_type }}" readonly>
         </div>
 
+        <div class="form-group">
+            <label>Nama Template</label>
+            <input type="text" class="form-control" value="{{ $campaign->template_name ?? '-' }}" readonly>
+        </div>
+
         {{-- MESSAGE BODY --}}
         <div class="form-group">
             <label>Message Body</label>

@@ -144,6 +144,8 @@ class CampaignIndihomeController extends Controller
      */
     public function store(Request $request)
     {
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
 
@@ -170,6 +172,7 @@ class CampaignIndihomeController extends Controller
 
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+            'template_name' => 'nullable|string|max:255',
 
             'carousel_product_1' => 'nullable|string|max:255',
             'carousel_product_2' => 'nullable|string|max:255',
@@ -184,6 +187,13 @@ class CampaignIndihomeController extends Controller
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
+
+        if ($isPrivileged) {
+            $validated['template_name'] = $validated['template_name'] ?? null;
+            $validated['nama_template'] = $validated['template_name'];
+        } else {
+            unset($validated['template_name'], $validated['nama_template']);
+        }
         /* ===============================
         | HANDLE FILE UPLOAD
         =============================== */
@@ -277,6 +287,7 @@ class CampaignIndihomeController extends Controller
     public function update(Request $request, CampaignIndihome $campaignIndihome)
     {
         $this->ensureCampaignAccess($campaignIndihome);
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // VALIDASI
         $validated = $request->validate([
@@ -294,6 +305,7 @@ class CampaignIndihomeController extends Controller
             'periode_campaign_end' => 'nullable|date|after_or_equal:periode_campaign_start',
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+            'template_name' => 'nullable|string|max:255',
             'cc' => 'nullable|file|mimes:xls,xlsx|max:5120',
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -308,6 +320,13 @@ class CampaignIndihomeController extends Controller
             'carousel_product_4' => 'nullable|string|max:255',
             'carousel_product_5' => 'nullable|string|max:255',
         ]);
+
+        if ($isPrivileged) {
+            $validated['template_name'] = $validated['template_name'] ?? null;
+            $validated['nama_template'] = $validated['template_name'];
+        } else {
+            unset($validated['template_name'], $validated['nama_template']);
+        }
 
         // HANDLE TYPE
         if ($validated['campaign_type'] === 'LBA') {

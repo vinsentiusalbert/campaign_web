@@ -10,6 +10,7 @@ class CampaignIndihome extends Model
 
     protected $fillable = [
         'user_id',
+        'template_name',
         'area',
         'region',
         'branch',

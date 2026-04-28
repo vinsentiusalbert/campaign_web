@@ -16,6 +16,7 @@ return new class extends Migration
 
             // User pembuat
             $table->integer('user_id');
+            $table->string('template_name')->nullable();
 
             // Data utama
             $table->string('area')->nullable();
