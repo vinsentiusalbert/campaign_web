@@ -56,6 +56,14 @@
             @csrf
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
+            @if(in_array(auth()->user()->role, ['Admin', 'Super']))
+            <div class="form-group">
+                <label for="template_name">Nama Template</label>
+                <input type="text" id="template_name" name="template_name" class="form-control" value="{{ old('template_name') }}">
+                @error('template_name') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+            @endif
+
             {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
@@ -187,11 +195,6 @@
                 <input type="number" name="jumlah_blast" class="form-control">
             </div>
 
-            {{-- TEMPLATE --}}
-            <div class="form-group" style="display: none; ">
-                <label>Nama Template</label>
-                <input type="text" name="nama_template" class="form-control">
-            </div>
             {{-- CC FILE --}}
             <div class="form-group">
                 <label>Upload CC (Excel)</label>
@@ -347,5 +350,3 @@ $(document).ready(function () {
 });
 </script>
 @endsection
-
-

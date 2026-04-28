@@ -10,6 +10,7 @@ class CampaignSoundbox extends Model
 
     protected $fillable = [
         'user_id',
+        'template_name',
         'area',
         'region',
         'branch',
@@ -50,5 +51,4 @@ class CampaignSoundbox extends Model
         return $this->belongsTo(User::class);
     }
 }
-
 

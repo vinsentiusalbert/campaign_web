@@ -96,6 +96,11 @@
             <div class="detail-box">{{ $campaign->campaign_type }}</div>
         </div>
 
+        <div>
+            <div class="detail-label">Nama Template</div>
+            <div class="detail-box">{{ $campaign->template_name ?? '-' }}</div>
+        </div>
+
         {{-- NAMA FILE WHITELIST --}}
         <div>
             <div class="detail-label">Nama File Whitelist</div>
@@ -168,4 +173,3 @@
     </div>
 </div>
 @endsection
-

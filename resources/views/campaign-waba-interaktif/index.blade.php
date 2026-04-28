@@ -57,7 +57,7 @@
                         <th>End</th>
                         <th>Jumlah Blast</th>
                         {{-- <th>Radius</th> --}}
-                        <th>Whitelist File</th>
+                        <th>Nama Template</th>
                         <th>Status Testing</th>
                         <th>Status</th>
                         <th>Aksi</th>
@@ -102,7 +102,7 @@ $(document).ready(function () {
             { data: 'periode_campaign_end', name: 'periode_campaign_end' },
             { data: 'jumlah_blast', name: 'jumlah_blast' },
             // { data: 'radius', name: 'radius' },
-            { data: 'nama_file_whitelist', name: 'nama_file_whitelist' },
+            { data: 'template_name', name: 'template_name' },
             { data: 'status_testing', name: 'status_testing' },
             { data: 'status', name: 'status' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false }

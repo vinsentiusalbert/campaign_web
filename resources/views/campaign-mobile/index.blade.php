@@ -51,7 +51,7 @@
                         {{-- <th>Message Body</th>
                         <th>KV Link</th> --}}
                         <th>User Type</th>
-                        {{-- <th>File Whitelist</th> --}}
+                        <th>Nama Template</th>
                         <th>Start</th>
                         <th>End</th>
                         <th>Jumlah Blast</th>
@@ -91,7 +91,7 @@ $(document).ready(function() {
             // { data: 'message_body', name: 'message_body' },
             // { data: 'kv_message_link', name: 'kv_message_link' },
             { data: 'shortmax_user_type', name: 'shortmax_user_type' },
-            // { data: 'nama_file_whitelist', name: 'nama_file_whitelist' },
+            { data: 'template_name', name: 'template_name' },
             { data: 'periode_campaign_start', name: 'periode_campaign_start' },
             { data: 'periode_campaign_end', name: 'periode_campaign_end' },
             { data: 'jumlah_blast', name: 'jumlah_blast' },

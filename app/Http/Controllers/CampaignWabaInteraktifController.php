@@ -135,6 +135,8 @@ class CampaignWabaInteraktifController extends Controller
      */
     public function store(Request $request)
     {
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
 
@@ -161,6 +163,7 @@ class CampaignWabaInteraktifController extends Controller
 
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+            'template_name' => 'nullable|string|max:255',
 
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -177,6 +180,13 @@ class CampaignWabaInteraktifController extends Controller
             // CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
+
+        if ($isPrivileged) {
+            $validated['template_name'] = $validated['template_name'] ?? null;
+            $validated['nama_template'] = $validated['template_name'];
+        } else {
+            unset($validated['template_name'], $validated['nama_template']);
+        }
         /* ===============================
         | HANDLE FILE UPLOAD
         =============================== */
@@ -270,6 +280,7 @@ class CampaignWabaInteraktifController extends Controller
     public function update(Request $request, CampaignWabaInteraktif $campaignWabaInteraktif)
     {
         $this->ensureCampaignAccess($campaignWabaInteraktif);
+        $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
@@ -294,6 +305,7 @@ class CampaignWabaInteraktifController extends Controller
 
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
+            'template_name' => 'nullable|string|max:255',
 
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -311,6 +323,13 @@ class CampaignWabaInteraktifController extends Controller
             // ✅ CC FILE (EXCEL)
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
         ]);
+
+        if ($isPrivileged) {
+            $validated['template_name'] = $validated['template_name'] ?? null;
+            $validated['nama_template'] = $validated['template_name'];
+        } else {
+            unset($validated['template_name'], $validated['nama_template']);
+        }
         if ($validated['campaign_type'] === 'LBA') {
 
             // 🔴 LBA → whitelist harus NULL

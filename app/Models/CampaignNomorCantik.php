@@ -11,6 +11,7 @@ class CampaignNomorCantik extends Model
 
     protected $fillable = [
         'user_id',
+        'template_name',
         'area',
         'region',
         'branch',
@@ -31,4 +32,3 @@ class CampaignNomorCantik extends Model
         'status_testing'
     ];
 }
-

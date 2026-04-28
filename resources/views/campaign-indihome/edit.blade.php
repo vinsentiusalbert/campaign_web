@@ -42,6 +42,14 @@
 
         <div class="card-body">
 
+            @if(in_array(auth()->user()->role, ['Admin', 'Super']))
+            <div class="form-group">
+                <label for="template_name">Nama Template</label>
+                <input type="text" id="template_name" name="template_name" class="form-control" value="{{ old('template_name', $campaign->template_name) }}">
+                @error('template_name') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+            @endif
+
             {{-- AREA --}}
             <div class="form-group">
                 <label>Area</label>
