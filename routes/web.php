@@ -109,6 +109,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
 Route::middleware(['auth', 'checkrole:KAM,Admin,Super'])->group(function () {
     Route::get('/campaign-kam-dashboard', [CampaignKamDashboardController::class, 'index'])->name('campaign-kam-dashboard.index');
     Route::get('/campaign-kam-dashboard/data', [CampaignKamDashboardController::class, 'data'])->name('campaign-kam-dashboard.data');
+    Route::post('/campaign-kam-dashboard/saldo', [CampaignKamDashboardController::class, 'updateSaldo'])->name('campaign-kam-dashboard.update-saldo');
 
     Route::prefix('campaign-kam')->name('campaign-kam.')->group(function () {
         Route::get('/', [CampaignKamController::class, 'index'])->name('index');
@@ -146,3 +147,4 @@ Route::middleware(['auth', 'checkrole:User,Admin,Super'])->group(function () {
         Route::post('/{id}/toggle-testing', [CampaignWabaInteraktifController::class, 'toggleTesting'])->name('toggle-testing');
     });
 });
+

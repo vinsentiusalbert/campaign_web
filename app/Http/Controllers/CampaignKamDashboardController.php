@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\CampaignKam;
 use App\Models\CampaignKamReport;
+use App\Models\KamGlobalSaldo;
+use App\Models\KamGlobalSaldoHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class CampaignKamDashboardController extends Controller
@@ -12,6 +15,11 @@ class CampaignKamDashboardController extends Controller
     private function ensureKamDashboardAccess(): void
     {
         abort_unless(in_array(auth()->user()->role, ['Admin', 'Super', 'KAM']), 403);
+    }
+
+    private function canManageSaldo(): bool
+    {
+        return in_array(auth()->user()->role, ['Admin', 'Super']);
     }
 
     private function accessibleCampaignsQuery()
@@ -25,12 +33,20 @@ class CampaignKamDashboardController extends Controller
         return $campaignsQuery;
     }
 
+    private function globalSaldo(): KamGlobalSaldo
+    {
+        return KamGlobalSaldo::query()->firstOrCreate(
+            ['id' => 1],
+            ['name' => 'Global KAM', 'balance' => 0]
+        );
+    }
+
     public function index(Request $request)
     {
         $this->ensureKamDashboardAccess();
 
         $campaignsQuery = $this->accessibleCampaignsQuery();
-        $campaigns = $campaignsQuery->get(['id', 'campaign_unique_id', 'template_name', 'sender_name']);
+        $campaigns = $campaignsQuery->get(['id', 'user_id', 'campaign_unique_id', 'template_name', 'sender_name']);
         $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
         $campaignTableQuery = CampaignKam::query()
             ->whereIn('id', $campaigns->pluck('id'))
@@ -48,7 +64,6 @@ class CampaignKamDashboardController extends Controller
 
         $totalRead = (int) $campaignRows->sum(fn ($row) => (int) ($row->total_read ?? 0));
         $totalRevenue = (float) $campaignRows->sum(fn ($row) => (float) ($row->total_revenue ?? 0));
-        $sisaSaldo = (float) $campaignRows->sum(fn ($row) => (float) ($row->sisa_saldo ?? 0));
 
         $reportRowsQuery = CampaignKamReport::query()
             ->whereIn('campaign_kam_id', $campaigns->pluck('id'))
@@ -62,9 +77,19 @@ class CampaignKamDashboardController extends Controller
             ->whereRaw('LOWER(status) = ?', ['failed'])
             ->count();
 
+        $globalSaldo = $this->globalSaldo();
         $totalDelivered = $successfulReportCount;
         $balanceTerpakai = $successfulReportCount * 309;
+        $saldoKam = (float) $globalSaldo->balance;
+        $sisaSaldo = $saldoKam - $balanceTerpakai;
+        $saldoHistories = KamGlobalSaldoHistory::query()
+            ->with('creator:id,name')
+            ->where('kam_global_saldo_id', $globalSaldo->id)
+            ->latest()
+            ->limit(10)
+            ->get();
         $tableRowCount = (clone $reportRowsQuery)->count();
+        $canManageSaldo = $this->canManageSaldo();
 
         return view('campaign-kam.dashboard', compact(
             'campaigns',
@@ -76,10 +101,45 @@ class CampaignKamDashboardController extends Controller
             'balanceTerpakai',
             'failedReportCount',
             'tableRowCount',
+            'canManageSaldo',
+            'saldoKam',
+            'saldoHistories',
             'selectedCampaign',
             'showMissingUploadWarning',
             'selectedCampaignModel'
         ));
+    }
+
+    public function updateSaldo(Request $request)
+    {
+        $this->ensureKamDashboardAccess();
+        abort_unless($this->canManageSaldo(), 403);
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $globalSaldo = $this->globalSaldo();
+            $newBalance = (float) $globalSaldo->balance + (float) $validated['amount'];
+
+            $globalSaldo->update([
+                'balance' => $newBalance,
+            ]);
+
+            KamGlobalSaldoHistory::create([
+                'kam_global_saldo_id' => $globalSaldo->id,
+                'amount' => $validated['amount'],
+                'balance_after' => $newBalance,
+                'note' => $validated['note'] ?? null,
+                'created_by' => auth()->id(),
+            ]);
+        });
+
+        return redirect()
+            ->route('campaign-kam-dashboard.index', array_filter(['campaign_id' => $request->campaign_id]))
+            ->with('success', 'Saldo global KAM berhasil ditambahkan.');
     }
 
     public function data(Request $request)
@@ -137,6 +197,3 @@ class CampaignKamDashboardController extends Controller
             ->make(true);
     }
 }
-
-
-

@@ -73,6 +73,8 @@ class BackController extends Controller
             switch ($user->role) {
                 case 'User':
                     return redirect()->route('campaign-waba-interaktif.index');
+                case 'KAM':
+                    return redirect()->route('campaign-kam-dashboard.index');
                 case 'Tsel':
                 case 'Super':
                 case 'Admin':
@@ -719,3 +721,4 @@ class BackController extends Controller
     }
     
 }
+

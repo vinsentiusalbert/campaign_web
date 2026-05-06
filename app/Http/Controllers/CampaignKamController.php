@@ -114,7 +114,7 @@ class CampaignKamController extends Controller
 
                 $url = asset('storage/campaign/report-csv/' . $row->report_csv_file);
 
-                return '<a href="' . $url . '" target="_blank" class="btn btn-outline-secondary btn-sm">Lihat CSV</a>';
+                return '<a href="' . $url . '" target="_blank" class="btn btn-outline-secondary btn-sm">Lihat XLSX</a>';
             })
             ->addColumn('aksi', function ($row) {
                 $uploadUrl = route('campaign-kam.upload-report', $row->id);
