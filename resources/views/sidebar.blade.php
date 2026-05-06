@@ -18,6 +18,7 @@
                 $isTreg = $user->role === 'Treg';
                 $isCanv = $user->role === 'Canvasser';
                 $isUser = $user->role === 'User';
+                $isKam = $user->role === 'KAM';
                 @endphp
 
                 @if($isAdmin && $user->email === 'admin@telkomsel.co.id')
@@ -28,6 +29,8 @@
                 <span class="badge badge-success">TSEL</span>
                 @elseif($user->role === 'User')
                 <span class="badge badge-success">User</span>
+                @elseif($isKam)
+                <span class="badge badge-primary">KAM</span>
                 @elseif($isTreg)
                 @php
                 $treg_name = DB::table('treg')->where('id', $user->treg_id)->value('treg_name');
@@ -49,6 +52,22 @@
                         <p>WABA Interaktif</p>
                     </a>
                 </li>
+                @elseif($isKam)
+                <li class="nav-header">Campaign</li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-kam-dashboard.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-kam-dashboard.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line" style="color:#c0392b;"></i>
+                        <p>Dashboard KAM</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-kam.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-kam.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-briefcase" style="color:#fd7e14;"></i>
+                        <p>Campaign KAM</p>
+                    </a>
+                </li>
                 @else
                 <li class="nav-header">Campaign</li>
                 <li class="nav-item">
@@ -66,6 +85,22 @@
                         <p>Campaign Indihome</p>
                     </a>
                 </li>
+                @if($isAdmin || $isSuper)
+                <li class="nav-item">
+                    <a href="{{ route('campaign-kam-dashboard.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-kam-dashboard.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line" style="color:#c0392b;"></i>
+                        <p>Dashboard KAM</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('campaign-kam.index') }}"
+                        class="nav-link waves-effect {{ request()->routeIs('campaign-kam.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-briefcase" style="color:#fd7e14;"></i>
+                        <p>Campaign KAM</p>
+                    </a>
+                </li>
+                @endif
                 <li class="nav-item">
                     <a href="{{ route('campaign-orbit.index') }}"
                         class="nav-link waves-effect {{ request()->routeIs('campaign-orbit.index') ? 'active' : '' }}">
@@ -98,7 +133,7 @@
                 @endif
                 @endif
 
-                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser || $isKam)
                 <li class="nav-header">System Management</li>
                 @endif
                 @if($isSuper)
@@ -110,7 +145,7 @@
                     </a>
                 </li>
                 @endif
-                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv|| $isUser || $isKam)
                 <li class="nav-item">
                     <a href="{{ url('change-password') }}"
                         class="nav-link waves-effect {{ request()->routeIs('change-password') ? 'active' : '' }}">
@@ -123,7 +158,7 @@
 
 
                 {{-- ===== Logout untuk semua role yang ditangani di atas ===== --}}
-                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv || $isUser)
+                @if($isSuper || $isAdmin || $isTreg || $isTsel || $isCanv || $isUser || $isKam)
                 <li class="nav-header">LOGOUT</li>
                 <li class="nav-item">
                     <a href="{{ url('logout') }}"

@@ -7,6 +7,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CampaignMobileController;
 use App\Http\Controllers\CampaignIndihomeController;
+use App\Http\Controllers\CampaignKamController;
+use App\Http\Controllers\CampaignKamDashboardController;
 use App\Http\Controllers\CampaignOrbitController;
 use App\Http\Controllers\CampaignSoundboxController;
 use App\Http\Controllers\CampaignNomorCantikController;
@@ -101,6 +103,27 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignNomorCantikController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignNomorCantikController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignNomorCantikController::class, 'toggleTesting'])->name('toggle-testing');
+    });
+});
+
+Route::middleware(['auth', 'checkrole:KAM,Admin,Super'])->group(function () {
+    Route::get('/campaign-kam-dashboard', [CampaignKamDashboardController::class, 'index'])->name('campaign-kam-dashboard.index');
+    Route::get('/campaign-kam-dashboard/data', [CampaignKamDashboardController::class, 'data'])->name('campaign-kam-dashboard.data');
+
+    Route::prefix('campaign-kam')->name('campaign-kam.')->group(function () {
+        Route::get('/', [CampaignKamController::class, 'index'])->name('index');
+        Route::get('/create', [CampaignKamController::class, 'create'])->name('create');
+        Route::get('/data', [CampaignKamController::class, 'data'])->name('data');
+        Route::get('/template/download', [CampaignKamController::class, 'downloadTemplate'])->name('template.download');
+        Route::post('/store', [CampaignKamController::class, 'store'])->name('store');
+        Route::post('/{id}/upload-report', [CampaignKamController::class, 'uploadReport'])->name('upload-report');
+        Route::get('/{id}/edit', [CampaignKamController::class, 'edit'])->name('edit');
+        Route::put('/{campaignKam}', [CampaignKamController::class, 'update'])->name('update');
+        Route::get('/{id}', [CampaignKamController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CampaignKamController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [CampaignKamController::class, 'download'])->name('download');
+        Route::post('/{id}/activate', [CampaignKamController::class, 'activate'])->name('activate');
+        Route::post('/{id}/toggle-testing', [CampaignKamController::class, 'toggleTesting'])->name('toggle-testing');
     });
 });
 
