@@ -49,6 +49,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     public function hasRole($roles)
     {
         if (is_array($roles)) {
