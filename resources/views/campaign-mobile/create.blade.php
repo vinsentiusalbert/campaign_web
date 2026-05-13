@@ -59,6 +59,18 @@
                 @error('template_name') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
             @endif
+            @if(in_array(auth()->user()->role, ['Admin', 'Super']))
+            <div class="form-group">
+                <label for="vendor">Vendor</label>
+                                <select id="vendor" name="vendor" class="form-control">
+                    <option value="">-- Pilih Vendor --</option>
+                    @foreach($vendors as $vendorOption)
+                        <option value="{{ $vendorOption }}" {{ old('vendor') == $vendorOption ? 'selected' : '' }}>{{ $vendorOption }}</option>
+                    @endforeach
+                </select>
+                @error('vendor') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+            @endif
 
             {{-- AREA --}}
             <div class="form-group">
@@ -367,3 +379,8 @@ function previewWhitelist(input) {
 }
 </script>
 @endsection
+
+
+
+
+

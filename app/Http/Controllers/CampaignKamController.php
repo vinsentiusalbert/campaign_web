@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vendor;
 use App\Models\CampaignKam;
 use App\Models\CampaignKamReport;
 use Illuminate\Http\Request;
@@ -18,8 +19,15 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 
 
+
 class CampaignKamController extends Controller
 {
+    private function vendorOptions()
+    {
+        return Vendor::query()
+            ->orderBy('name')
+            ->pluck('name');
+    }
     private const REPORT_CSV_HEADERS = [
         'Campaign Id',
         'Created Date',
@@ -86,8 +94,7 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $query = CampaignKam::query()
-            ->leftJoin('users', 'users.id', '=', 'campaign_kam.user_id')
-            ->select('campaign_kam.*', 'users.vendor as vendor');
+            ->select('campaign_kam.*');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
@@ -207,8 +214,9 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $senderNameOptions = self::SENDER_NAME_OPTIONS;
+        $vendors = $this->vendorOptions();
 
-        return view('campaign-kam.create', compact('senderNameOptions'));
+        return view('campaign-kam.create', compact('senderNameOptions', 'vendors'));
     }
 
     /**
@@ -218,6 +226,7 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -247,6 +256,7 @@ class CampaignKamController extends Controller
             'balance_terpakai' => 'nullable|numeric|min:0',
             'nama_template' => 'nullable|string|max:255',
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
 
             'carousel_product_1' => 'nullable|string|max:255',
             'carousel_product_2' => 'nullable|string|max:255',
@@ -269,6 +279,12 @@ class CampaignKamController extends Controller
             $validated['nama_template'] = $validated['template_name'];
         } else {
             unset($validated['template_name'], $validated['nama_template']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
         /* ===============================
         | HANDLE FILE UPLOAD
@@ -395,6 +411,7 @@ class CampaignKamController extends Controller
         $this->ensureKamModuleAccess();
         $this->ensureCampaignAccess($campaignKam);
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // VALIDASI
         $validated = $request->validate([
@@ -415,6 +432,7 @@ class CampaignKamController extends Controller
             'balance_terpakai' => 'nullable|numeric|min:0',
             'nama_template' => 'nullable|string|max:255',
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
             'cc' => 'nullable|file|mimes:xls,xlsx|max:5120',
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -437,6 +455,12 @@ class CampaignKamController extends Controller
             $validated['nama_template'] = $validated['template_name'];
         } else {
             unset($validated['template_name'], $validated['nama_template']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
 
         // HANDLE TYPE
@@ -881,6 +905,17 @@ class CampaignKamController extends Controller
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

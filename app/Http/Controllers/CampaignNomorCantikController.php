@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use App\Models\CampaignNomorCantik;
 use Yajra\DataTables\Facades\DataTables;
@@ -11,8 +12,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 
 
+
 class CampaignNomorCantikController extends Controller
 {
+    private function vendorOptions()
+    {
+        return Vendor::query()
+            ->orderBy('name')
+            ->pluck('name');
+    }
     private function ensureCampaignAccess(CampaignNomorCantik $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
@@ -31,8 +39,7 @@ class CampaignNomorCantikController extends Controller
     public function data(Request $request)
     {
         $query = CampaignNomorCantik::query()
-            ->leftJoin('users', 'users.id', '=', 'campaign_nomor_cantik.user_id')
-            ->select('campaign_nomor_cantik.*', 'users.vendor as vendor');
+            ->select('campaign_nomor_cantik.*');
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('campaign_nomor_cantik.user_id', auth()->id());
         }
@@ -110,7 +117,9 @@ class CampaignNomorCantikController extends Controller
      */
     public function create()
     {
-        return view('campaign-nomor-cantik.create');
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-nomor-cantik.create', compact('vendors'));
     }
 
     /**
@@ -119,6 +128,7 @@ class CampaignNomorCantikController extends Controller
     public function store(Request $request)
     {
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // Validasi data
         $validated = $request->validate([
@@ -149,11 +159,18 @@ class CampaignNomorCantikController extends Controller
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
 
         if (! $isPrivileged) {
             unset($validated['template_name']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
 
         $validated['user_id'] = auth()->id();
@@ -229,7 +246,9 @@ class CampaignNomorCantikController extends Controller
         $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-nomor-cantik.edit', compact('campaign'));
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-nomor-cantik.edit', compact('campaign', 'vendors'));
     }
 
     public function update(Request $request, $id)
@@ -237,6 +256,7 @@ class CampaignNomorCantikController extends Controller
         $campaign = CampaignNomorCantik::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // Validasi data
         $validated = $request->validate([
@@ -267,11 +287,18 @@ class CampaignNomorCantikController extends Controller
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
 
         if (! $isPrivileged) {
             unset($validated['template_name']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
 
         if ($validated['campaign_type'] === 'LBA') {
@@ -509,5 +536,19 @@ class CampaignNomorCantikController extends Controller
         ]);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -207,9 +207,9 @@
                         <label for="vendor">Vendor <span class="text-danger">*</span></label>
                         <select class="form-control" id="vendor" name="vendor" required>
                             <option value="">Pilih Vendor</option>
-                            <option value="Mitra SBP">Mitra SBP</option>
-                            <option value="Internal">Internal</option>
-                            <option value="External">External</option>
+                            @foreach($vendors as $vendorOption)
+                                <option value="{{ $vendorOption }}">{{ $vendorOption }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -496,6 +496,7 @@
 </script>
 
 @endsection
+
 
 
 
