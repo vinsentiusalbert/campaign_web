@@ -29,6 +29,7 @@ class CampaignKam extends Model
         'sisa_saldo',
         'balance_terpakai',
         'nama_template',
+        'vendor',
         'carousel_product_1',
         'kv_product_1',
         'carousel_product_2',
@@ -62,3 +63,8 @@ class CampaignKam extends Model
         return $this->hasMany(CampaignKamReport::class, 'campaign_kam_id');
     }
 }
+
+
+
+
+

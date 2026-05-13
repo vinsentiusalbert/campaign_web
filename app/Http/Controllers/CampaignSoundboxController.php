@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vendor;
 use App\Models\CampaignSoundbox;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -13,8 +14,15 @@ use Illuminate\Support\Facades\File;
 
 
 
+
 class CampaignSoundboxController extends Controller
 {
+    private function vendorOptions()
+    {
+        return Vendor::query()
+            ->orderBy('name')
+            ->pluck('name');
+    }
     private function ensureCampaignAccess(CampaignSoundbox $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
@@ -32,8 +40,7 @@ class CampaignSoundboxController extends Controller
     public function data(Request $request)
     {
         $query = CampaignSoundbox::query()
-            ->leftJoin('users', 'users.id', '=', 'campaign_soundbox.user_id')
-            ->select('campaign_soundbox.*', 'users.vendor as vendor');
+            ->select('campaign_soundbox.*');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
@@ -124,7 +131,9 @@ class CampaignSoundboxController extends Controller
      */
     public function create()
     {
-        return view('campaign-soundbox.create');
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-soundbox.create', compact('vendors'));
     }
 
     /**
@@ -133,6 +142,7 @@ class CampaignSoundboxController extends Controller
     public function store(Request $request)
     {
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -161,6 +171,7 @@ class CampaignSoundboxController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
 
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -183,6 +194,12 @@ class CampaignSoundboxController extends Controller
             $validated['nama_template'] = $validated['template_name'];
         } else {
             unset($validated['template_name'], $validated['nama_template']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
         /* ===============================
         | HANDLE FILE UPLOAD
@@ -268,7 +285,9 @@ class CampaignSoundboxController extends Controller
         $campaign = CampaignSoundbox::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-soundbox.edit', compact('campaign'));
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-soundbox.edit', compact('campaign', 'vendors'));
     }
 
     /**
@@ -278,6 +297,7 @@ class CampaignSoundboxController extends Controller
     {
         $this->ensureCampaignAccess($campaignSoundbox);
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
         $validated = $request->validate([
             'area' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',
@@ -303,6 +323,7 @@ class CampaignSoundboxController extends Controller
             'jumlah_blast' => 'nullable|integer|min:0',
             'nama_template' => 'nullable|string|max:255',
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
 
             // KV Product Images
             'kv_product_image_1' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -326,6 +347,12 @@ class CampaignSoundboxController extends Controller
             $validated['nama_template'] = $validated['template_name'];
         } else {
             unset($validated['template_name'], $validated['nama_template']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
         if ($validated['campaign_type'] === 'LBA') {
 
@@ -594,6 +621,20 @@ class CampaignSoundboxController extends Controller
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

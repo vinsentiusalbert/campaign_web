@@ -27,8 +27,14 @@ class CampaignMobile extends Model
         'periode_campaign_end',
         'jumlah_blast',
         'cc',
+        'vendor',
         'nama_campaign',
         'status',
         'status_testing'
     ];
 }
+
+
+
+
+

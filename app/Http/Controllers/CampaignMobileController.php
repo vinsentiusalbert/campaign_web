@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use App\Models\CampaignMobile;
 use Yajra\DataTables\Facades\DataTables;
@@ -11,8 +12,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 
 
+
 class CampaignMobileController extends Controller
 {
+    private function vendorOptions()
+    {
+        return Vendor::query()
+            ->orderBy('name')
+            ->pluck('name');
+    }
     private function ensureCampaignAccess(CampaignMobile $campaign): void
     {
         if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
@@ -31,8 +39,7 @@ class CampaignMobileController extends Controller
     public function data(Request $request)
     {
         $query = CampaignMobile::query()
-            ->leftJoin('users', 'users.id', '=', 'campaign_mobile.user_id')
-            ->select('campaign_mobile.*', 'users.vendor as vendor');
+            ->select('campaign_mobile.*');
         if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
             $query->where('campaign_mobile.user_id', auth()->id());
         }
@@ -116,7 +123,9 @@ class CampaignMobileController extends Controller
      */
     public function create()
     {
-        return view('campaign-mobile.create');
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-mobile.create', compact('vendors'));
     }
 
     /**
@@ -125,6 +134,7 @@ class CampaignMobileController extends Controller
     public function store(Request $request)
     {
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // Validasi data
         $validated = $request->validate([
@@ -155,11 +165,18 @@ class CampaignMobileController extends Controller
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
 
         if (! $isPrivileged) {
             unset($validated['template_name']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
 
         $validated['user_id'] = auth()->id();
@@ -235,7 +252,9 @@ class CampaignMobileController extends Controller
         $campaign = CampaignMobile::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
 
-        return view('campaign-mobile.edit', compact('campaign'));
+        $vendors = $this->vendorOptions();
+
+        return view('campaign-mobile.edit', compact('campaign', 'vendors'));
     }
 
     public function update(Request $request, $id)
@@ -243,6 +262,7 @@ class CampaignMobileController extends Controller
         $campaign = CampaignMobile::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         $isPrivileged = in_array(auth()->user()->role, ['Admin', 'Super']);
+        $canEditVendor = in_array(auth()->user()->role, ['Admin', 'Super']);
 
         // Validasi data
         $validated = $request->validate([
@@ -273,11 +293,18 @@ class CampaignMobileController extends Controller
             'cc' => 'nullable|file|mimes:xlsx,xls|max:5120',
 
             'template_name' => 'nullable|string|max:255',
+            'vendor' => 'nullable|string|exists:vendors,name',
             'nama_campaign' => 'nullable|string|max:255',
         ]);
 
         if (! $isPrivileged) {
             unset($validated['template_name']);
+        }
+
+        if (! $canEditVendor) {
+            unset($validated['vendor']);
+        } else {
+            $validated['vendor'] = $validated['vendor'] ?? null;
         }
 
         if ($validated['campaign_type'] === 'LBA') {
@@ -514,4 +541,18 @@ class CampaignMobileController extends Controller
         ]);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

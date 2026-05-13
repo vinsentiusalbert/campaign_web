@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Vendor;
 use DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +19,13 @@ class UserController extends Controller
 {
     public function index()
     {
-        // $treg = DB::table('treg')->select('id', 'treg_name')->get();
-        return view('auth.user');
+        $vendors = Vendor::query()
+            ->orderBy('name')
+            ->pluck('name');
+
+        return view('auth.user', compact('vendors'));
     }
+
     public function getUsers(Request $request)
     {
         $data = DB::table('users')
@@ -47,7 +51,7 @@ class UserController extends Controller
             'nohp'  => 'required',
             'email' => 'required|email|unique:users,email',
             'role'  => 'required',
-            'vendor' => 'required'
+            'vendor' => 'required|exists:vendors,name'
         ]);
 
         DB::table('users')->insert([
@@ -56,7 +60,7 @@ class UserController extends Controller
             'email' => $request->email,
             'role' => $request->role,
             'vendor' => $request->vendor,
-            'password' => bcrypt('123456'), // default
+            'password' => bcrypt('123456'),
             'status' => 'Aktif',
             'created_at' => now()
         ]);
@@ -64,17 +68,15 @@ class UserController extends Controller
         return response()->json(['message' => 'User berhasil ditambahkan']);
     }
 
-    // new: ambil data user untuk diedit
     public function editUser($id)
     {
         $user = DB::table('users')->where('id', $id)->first();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User tidak ditemukan'], 404);
         }
         return response()->json($user);
     }
 
-    // new: update user
     public function updateUser(Request $request, $id)
     {
         $request->validate([
@@ -82,7 +84,7 @@ class UserController extends Controller
             'nohp'  => 'required',
             'email' => 'required|email|unique:users,email,' . $id,
             'role'  => 'required',
-            'vendor' => 'required',
+            'vendor' => 'required|exists:vendors,name',
         ]);
 
         $data = [
@@ -108,10 +110,3 @@ class UserController extends Controller
         return response()->json(['message' => 'User berhasil di-nonaktifkan']);
     }
 }
-
-
-
-
-
-
-

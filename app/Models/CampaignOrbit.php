@@ -25,6 +25,7 @@ class CampaignOrbit extends Model
         'periode_campaign_end',
         'jumlah_blast',
         'nama_template',
+        'vendor',
         'carousel_product_1',
         'kv_product_1',
         'carousel_product_2',
@@ -51,3 +52,8 @@ class CampaignOrbit extends Model
         return $this->belongsTo(User::class);
     }
 }
+
+
+
+
+
