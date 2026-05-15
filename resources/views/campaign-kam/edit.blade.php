@@ -163,27 +163,6 @@
                 <input type="number" name="jumlah_blast" class="form-control" value="{{ old('jumlah_blast', $campaign->jumlah_blast) }}">
             </div>
 
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label>Total Read</label>
-                    <input type="number" name="total_read" class="form-control" value="{{ old('total_read', $campaign->total_read) }}" min="0">
-                </div>
-                <div class="form-group col-md-6">
-                    <label>Total Revenue</label>
-                    <input type="number" step="0.01" name="total_revenue" class="form-control" value="{{ old('total_revenue', $campaign->total_revenue) }}" min="0">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label>Sisa Saldo</label>
-                    <input type="number" step="0.01" name="sisa_saldo" class="form-control" value="{{ old('sisa_saldo', $campaign->sisa_saldo) }}" min="0">
-                </div>
-                <div class="form-group col-md-6">
-                    <label>Balance Terpakai</label>
-                    <input type="number" step="0.01" name="balance_terpakai" class="form-control" value="{{ old('balance_terpakai', $campaign->balance_terpakai) }}" min="0">
-                </div>
-            </div>
 
             {{-- CC --}}
             <div class="form-group">
@@ -257,6 +236,7 @@ function previewImage(url) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection
+
 
 
 
