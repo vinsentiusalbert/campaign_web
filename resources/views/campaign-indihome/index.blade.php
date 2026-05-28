@@ -70,12 +70,82 @@
     </div>
 </div>
 @endsection
-
+<div class="modal fade" id="reportLinkModal" tabindex="-1" role="dialog" aria-labelledby="reportLinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="reportLinkForm" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportLinkModalLabel">Tambah Link Report</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-0">
+                    <label for="report_link">Link Report</label>
+                    <input type="url" name="report_link" id="report_link" class="form-control" placeholder="https://..." required>
+                    <small class="text-muted">Link report akan disimpan ke campaign yang dipilih.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary" id="reportLinkSubmitButton">Simpan Link</button>
+            </div>
+        </form>
+    </div>
+</div>
 @section('js')
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function openReportLinkModal(id, currentLink, submitUrl) {
+    $('#reportLinkForm').attr('action', submitUrl);
+    $('#report_link').val(currentLink || '');
+    $('#reportLinkModal').modal('show');
+}
 
+$(function () {
+    $('#reportLinkForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const submitButton = $('#reportLinkSubmitButton');
+        const defaultText = 'Simpan Link';
+
+        submitButton.prop('disabled', true).text('Menyimpan...');
+
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function (res) {
+                $('#reportLinkModal').modal('hide');
+                Swal.fire('Berhasil!', res.message || 'Link report berhasil disimpan.', 'success');
+                $('#campaignIndihomeTable').DataTable().ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                let message = 'Gagal menyimpan link report.';
+
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    if (xhr.responseJSON.errors && xhr.responseJSON.errors.report_link) {
+                        message = xhr.responseJSON.errors.report_link[0];
+                    }
+                }
+
+                Swal.fire('Error!', message, 'error');
+            },
+            complete: function () {
+                submitButton.prop('disabled', false).text(defaultText);
+            }
+        });
+    });
+});
+</script>
 <script>
 $(document).ready(function () {
 
@@ -207,7 +277,7 @@ function toggleTesting(id) {
 }
 
 
+
+
 </script>
-
 @endsection
-
