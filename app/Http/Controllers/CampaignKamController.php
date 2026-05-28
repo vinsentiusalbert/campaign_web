@@ -28,6 +28,13 @@ class CampaignKamController extends Controller
             ->orderBy('name')
             ->pluck('name');
     }
+
+    private function ensureReportLinkAccess(): void
+    {
+        if (! in_array(auth()->user()->role, ['Admin', 'Super'])) {
+            abort(403);
+        }
+    }
     private const REPORT_CSV_HEADERS = [
         'Campaign Id',
         'Created Date',
@@ -170,6 +177,25 @@ class CampaignKamController extends Controller
                             </button>
                         ';
                     }
+                }
+
+                if (! empty($row->report_link)) {
+                    $buttons .= '
+                        <a href="'.e($row->report_link).'" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm ml-1">
+                            Lihat Report
+                        </a>
+                    ';
+                }
+
+                if (in_array(Auth::user()->role, ['Admin', 'Super'])) {
+                    $reportLinkUrl = route('campaign-kam.update-report-link', $row->id);
+                    $currentReportLink = htmlspecialchars(json_encode($row->report_link), ENT_QUOTES, 'UTF-8');
+                    $reportLinkUrlJs = htmlspecialchars(json_encode($reportLinkUrl), ENT_QUOTES, 'UTF-8');
+                    $buttons .= '
+                        <button type="button" class="btn btn-outline-secondary btn-sm ml-1" onclick="openReportLinkModal('.$row->id.', '.$currentReportLink.', '.$reportLinkUrlJs.')">
+                            Tambah Link Report
+                        </button>
+                    ';
                 }
 
                 // Download
@@ -793,6 +819,26 @@ class CampaignKamController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Campaign berhasil diaktifkan'
+        ]);
+    }
+
+    public function updateReportLink(Request $request, $id)
+    {
+        $this->ensureReportLinkAccess();
+
+        $campaign = CampaignKam::findOrFail($id);
+        $this->ensureCampaignAccess($campaign);
+
+        $validated = $request->validate([
+            'report_link' => 'required|url|max:2048',
+        ]);
+
+        $campaign->report_link = $validated['report_link'];
+        $campaign->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Link report berhasil disimpan.',
         ]);
     }
     public function toggleTesting($id)

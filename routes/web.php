@@ -48,6 +48,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignMobileController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignMobileController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignMobileController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignMobileController::class, 'updateReportLink'])->name('update-report-link');
     });
     Route::prefix('campaign-indihome')->name('campaign-indihome.')->middleware('auth')->group(function () {
         Route::get('/', [CampaignIndihomeController::class, 'index'])->name('index');
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignIndihomeController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignIndihomeController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignIndihomeController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignIndihomeController::class, 'updateReportLink'])->name('update-report-link');
     });
 
     Route::prefix('campaign-orbit')->name('campaign-orbit.')->middleware('auth')->group(function () {
@@ -75,6 +77,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignOrbitController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignOrbitController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignOrbitController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignOrbitController::class, 'updateReportLink'])->name('update-report-link');
     });
 
     Route::prefix('campaign-soundbox')->name('campaign-soundbox.')->middleware('auth')->group(function () {
@@ -89,6 +92,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignSoundboxController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignSoundboxController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignSoundboxController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignSoundboxController::class, 'updateReportLink'])->name('update-report-link');
     });
 
     Route::prefix('campaign-nomor-cantik')->name('campaign-nomor-cantik.')->middleware('auth')->group(function () {
@@ -103,6 +107,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
         Route::get('/{id}/download', [CampaignNomorCantikController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignNomorCantikController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignNomorCantikController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignNomorCantikController::class, 'updateReportLink'])->name('update-report-link');
     });
 });
 
@@ -125,6 +130,7 @@ Route::middleware(['auth', 'checkrole:KAM,Admin,Super'])->group(function () {
         Route::get('/{id}/download', [CampaignKamController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignKamController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignKamController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignKamController::class, 'updateReportLink'])->name('update-report-link');
     });
 });
 
@@ -145,6 +151,7 @@ Route::middleware(['auth', 'checkrole:User,Admin,Super'])->group(function () {
         Route::get('/{id}/download', [CampaignWabaInteraktifController::class, 'download'])->name('download');
         Route::post('/{id}/activate', [CampaignWabaInteraktifController::class, 'activate'])->name('activate');
         Route::post('/{id}/toggle-testing', [CampaignWabaInteraktifController::class, 'toggleTesting'])->name('toggle-testing');
+        Route::post('/{id}/report-link', [CampaignWabaInteraktifController::class, 'updateReportLink'])->name('update-report-link');
     });
 });
 
