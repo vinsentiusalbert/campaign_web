@@ -18,8 +18,8 @@ return new class extends Migration
             $table->date('deliv_read_date')->nullable()->after('deliv_report_time');
             $table->string('deliv_read_time')->nullable()->after('deliv_read_date');
 
-            $table->index(['campaign_kam_id', 'send_date']);
-            $table->index(['campaign_kam_id', 'deliv_report_status']);
+            // $table->index(['campaign_kam_id', 'send_date']);
+            // $table->index(['campaign_kam_id', 'deliv_report_status']);
         });
     }
 
