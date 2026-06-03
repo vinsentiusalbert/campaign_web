@@ -430,8 +430,9 @@ class CampaignKamController extends Controller
         $campaign = CampaignKam::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         $senderNameOptions = self::SENDER_NAME_OPTIONS;
+        $vendors = $this->vendorOptions();
 
-        return view('campaign-kam.edit', compact('campaign', 'senderNameOptions'));
+        return view('campaign-kam.edit', compact('campaign', 'senderNameOptions', 'vendors'));
     }
 
     /**
@@ -1030,7 +1031,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
 
 
 
