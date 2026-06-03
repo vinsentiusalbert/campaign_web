@@ -168,14 +168,11 @@ class CampaignKamDashboardController extends Controller
                     ? date('d-m-Y H:i', strtotime($row->report_csv_uploaded_at))
                     : 'Belum upload CSV';
             })
+            ->editColumn('unique_id', fn ($row) => $row->unique_id ?? '-')
+            ->editColumn('sender_id', fn ($row) => $row->sender_id ?? '-')
             ->editColumn('campaign_id', fn ($row) => $row->campaign_id ?? '-')
-            ->editColumn('created_date', function ($row) {
-                return $row->created_date ? date('d-m-Y', strtotime($row->created_date)) : '-';
-            })
-            ->editColumn('created_time', fn ($row) => $row->created_time ?? '-')
             ->editColumn('sender_name', fn ($row) => $row->sender_name ?? '-')
             ->editColumn('template_name', fn ($row) => $row->template_name ?? '-')
-            ->editColumn('category', fn ($row) => $row->category ?? '-')
             ->editColumn('msisdn', fn ($row) => $row->msisdn ?? '-')
             ->editColumn('status', function ($row) {
                 $status = strtolower((string) $row->status);
@@ -183,17 +180,22 @@ class CampaignKamDashboardController extends Controller
 
                 return '<span class="kam-status-badge ' . $statusClass . '">' . e($row->status ?? '-') . '</span>';
             })
-            ->editColumn('vendor_ref_id', function ($row) {
-                return '<div class="kam-ref-cell">' . e($row->vendor_ref_id ?? '-') . '</div>';
+            ->editColumn('send_date', function ($row) {
+                return $row->send_date ? date('d-m-Y', strtotime($row->send_date)) : '-';
             })
-            ->editColumn('sent_date', function ($row) {
-                return $row->sent_date ? date('d-m-Y', strtotime($row->sent_date)) : '-';
+            ->editColumn('deliv_report_status', fn ($row) => $row->deliv_report_status ?? '-')
+            ->editColumn('deliv_report_date', function ($row) {
+                return $row->deliv_report_date ? date('d-m-Y', strtotime($row->deliv_report_date)) : '-';
             })
-            ->editColumn('sent_time', fn ($row) => $row->sent_time ?? '-')
+            ->editColumn('deliv_report_time', fn ($row) => $row->deliv_report_time ?? '-')
+            ->editColumn('deliv_read_date', function ($row) {
+                return $row->deliv_read_date ? date('d-m-Y', strtotime($row->deliv_read_date)) : '-';
+            })
+            ->editColumn('deliv_read_time', fn ($row) => $row->deliv_read_time ?? '-')
             ->editColumn('note', function ($row) {
                 return '<div class="kam-note-cell">' . e($row->note ?? '-') . '</div>';
             })
-            ->rawColumns(['status', 'vendor_ref_id', 'note'])
+            ->rawColumns(['status', 'note'])
             ->make(true);
     }
 }

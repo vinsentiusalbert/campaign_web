@@ -10,6 +10,8 @@ class CampaignKamReport extends Model
 
     protected $fillable = [
         'campaign_kam_id',
+        'unique_id',
+        'sender_id',
         'campaign_id',
         'created_date',
         'created_time',
@@ -18,6 +20,12 @@ class CampaignKamReport extends Model
         'category',
         'msisdn',
         'status',
+        'send_date',
+        'deliv_report_status',
+        'deliv_report_date',
+        'deliv_report_time',
+        'deliv_read_date',
+        'deliv_read_time',
         'vendor_ref_id',
         'sent_date',
         'sent_time',
@@ -26,6 +34,9 @@ class CampaignKamReport extends Model
 
     protected $casts = [
         'created_date' => 'date',
+        'send_date' => 'date',
+        'deliv_report_date' => 'date',
+        'deliv_read_date' => 'date',
         'sent_date' => 'date',
     ];
 

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as SpreadsheetDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -35,19 +36,23 @@ class CampaignKamController extends Controller
             abort(403);
         }
     }
-    private const REPORT_CSV_HEADERS = [
-        'Campaign Id',
-        'Created Date',
-        'Created Time',
-        'Sender Name',
-        'Template Name',
-        'Category',
-        'MSISDN',
-        'Status',
-        'Vendor Ref Id',
-        'Sent Date',
-        'Sent Time',
-        'Note',
+    private const REPORT_TEMPLATE_FILE = 'acs_indihome_retention_ptkam_hq_hq_281225.xlsx';
+
+    private const REPORT_UPLOAD_HEADERS = [
+        'unique_id',
+        'sender_id',
+        'sender_name',
+        'campaign_id',
+        'template_name',
+        'msisdn',
+        'status',
+        'send_date',
+        'deliv_report_status',
+        'deliv_report_date',
+        'deliv_report_time',
+        'deliv_read_date',
+        'deliv_read_time',
+        'note',
     ];
 
     private const SENDER_NAME_OPTIONS = [
@@ -60,7 +65,7 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
 
-        if (!in_array(auth()->user()->role, ['Admin', 'Super']) && $campaign->user_id !== auth()->id()) {
+        if (!in_array(auth()->user()->role, ['Admin', 'Super', 'KAM']) && $campaign->user_id !== auth()->id()) {
             abort(403);
         }
     }
@@ -104,7 +109,7 @@ class CampaignKamController extends Controller
             ->select('campaign_kam.*');
 
         // Jika bukan admin, hanya lihat data sendiri
-        if (auth()->user()->role !== 'Admin' && auth()->user()->role !== 'Super') {
+        if (! in_array(auth()->user()->role, ['Admin', 'Super', 'KAM'])) {
             $query->where('campaign_kam.user_id', auth()->id());
         }
 
@@ -385,10 +390,10 @@ class CampaignKamController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->fromArray(self::REPORT_CSV_HEADERS, null, 'A1');
+        $sheet->fromArray(self::REPORT_UPLOAD_HEADERS, null, 'A1');
 
-        foreach (range('A', 'L') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
+        foreach (range(1, count(self::REPORT_UPLOAD_HEADERS)) as $columnIndex) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($columnIndex))->setAutoSize(true);
         }
 
         $tempFile = tempnam(sys_get_temp_dir(), 'kam_report_template_');
@@ -397,7 +402,7 @@ class CampaignKamController extends Controller
 
         return response()->download(
             $tempFile,
-            'dummy_report_kam.xlsx',
+            self::REPORT_TEMPLATE_FILE,
             [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]
@@ -596,20 +601,22 @@ class CampaignKamController extends Controller
         }
 
         $normalizedHeader = array_map([$this, 'normalizeCsvHeader'], $header);
-        $expectedHeader = array_map([$this, 'normalizeCsvHeader'], self::REPORT_CSV_HEADERS);
+        $expectedHeader = array_map([$this, 'normalizeCsvHeader'], self::REPORT_UPLOAD_HEADERS);
 
         if ($normalizedHeader !== $expectedHeader) {
             return redirect()
                 ->route('campaign-kam.index')
-                ->with('error', 'Format Excel tidak sesuai template dummy report KAM.');
+                ->with('error', 'Format Excel tidak sesuai template acs_indihome_retention_ptkam_hq_hq_281225.');
         }
 
         $rowsToInsert = [];
         $now = now();
         for ($rowNumber = 2; $rowNumber <= $highestRow; $rowNumber++) {
+            $cells = [];
             $row = [];
-            for ($columnIndex = 1; $columnIndex <= count(self::REPORT_CSV_HEADERS); $columnIndex++) {
+            for ($columnIndex = 1; $columnIndex <= count(self::REPORT_UPLOAD_HEADERS); $columnIndex++) {
                 $cell = $sheet->getCell(Coordinate::stringFromColumnIndex($columnIndex) . $rowNumber);
+                $cells[] = $cell;
                 $row[] = $this->extractSpreadsheetValue($cell);
             }
 
@@ -617,7 +624,7 @@ class CampaignKamController extends Controller
                 continue;
             }
 
-            $msisdn = $this->parseMsisdnForStorage($row[6], $rowNumber);
+            $msisdn = $this->parseMsisdnForStorage($row[5], $rowNumber);
             if ($msisdn['error']) {
                 return redirect()
                     ->route('campaign-kam.index')
@@ -626,18 +633,26 @@ class CampaignKamController extends Controller
 
             $rowsToInsert[] = [
                 'campaign_kam_id' => $campaign->id,
-                'campaign_id' => $this->cleanCsvValue($row[0]),
-                'created_date' => $this->parseCsvDate($row[1]),
-                'created_time' => $this->cleanCsvValue($row[2]),
-                'sender_name' => $this->cleanCsvValue($row[3]),
+                'unique_id' => $this->cleanCsvValue($row[0]),
+                'sender_id' => $this->cleanCsvValue($row[1]),
+                'campaign_id' => $this->cleanCsvValue($row[3]),
+                'created_date' => $this->parseSpreadsheetDateCell($cells[7]),
+                'created_time' => null,
+                'sender_name' => $this->cleanCsvValue($row[2]),
                 'template_name' => $this->cleanCsvValue($row[4]),
-                'category' => $this->cleanCsvValue($row[5]),
+                'category' => $this->cleanCsvValue($row[8]),
                 'msisdn' => $msisdn['value'],
-                'status' => $this->cleanCsvValue($row[7]),
-                'vendor_ref_id' => $this->cleanCsvValue($row[8]),
-                'sent_date' => $this->parseCsvDate($row[9]),
-                'sent_time' => $this->cleanCsvValue($row[10]),
-                'note' => $this->cleanCsvValue($row[11]),
+                'status' => $this->cleanCsvValue($row[6]),
+                'send_date' => $this->parseSpreadsheetDateCell($cells[7]),
+                'deliv_report_status' => $this->cleanCsvValue($row[8]),
+                'deliv_report_date' => $this->parseSpreadsheetDateCell($cells[9]),
+                'deliv_report_time' => $this->parseSpreadsheetTimeCell($cells[10]),
+                'deliv_read_date' => $this->parseSpreadsheetDateCell($cells[11]),
+                'deliv_read_time' => $this->parseSpreadsheetTimeCell($cells[12]),
+                'vendor_ref_id' => $this->cleanCsvValue($row[0]),
+                'sent_date' => $this->parseSpreadsheetDateCell($cells[9]),
+                'sent_time' => $this->parseSpreadsheetTimeCell($cells[10]),
+                'note' => $this->cleanCsvValue($row[13]),
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -888,6 +903,70 @@ class CampaignKamController extends Controller
         }
     }
 
+    private function parseSpreadsheetDateCell($cell): ?string
+    {
+        $value = $cell->getValue();
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return SpreadsheetDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        $clean = $this->cleanCsvValue((string) $cell->getFormattedValue());
+
+        if ($clean === null) {
+            return null;
+        }
+
+        foreach (['n/j/Y', 'd/m/Y', 'Y-m-d'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $clean)->format('Y-m-d');
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return null;
+    }
+
+    private function parseSpreadsheetTimeCell($cell): ?string
+    {
+        $value = $cell->getValue();
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return SpreadsheetDate::excelToDateTimeObject((float) $value)->format('H:i:s');
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        $clean = $this->cleanCsvValue((string) $cell->getFormattedValue());
+
+        if ($clean === null) {
+            return null;
+        }
+
+        foreach (['H:i:s', 'H:i'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $clean)->format('H:i:s');
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return null;
+    }
+
     private function isEmptyCsvRow(array $row): bool
     {
         foreach ($row as $value) {
@@ -951,10 +1030,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
-
-
-
 
 
 

@@ -355,17 +355,19 @@
                         <tr>
                             <th>Campaign ID</th>
                             <th>Last Update</th>
-                            <th>Campaign Id CSV</th>
-                            <th>Created Date</th>
-                            <th>Created Time</th>
+                            <th>Unique ID</th>
+                            <th>Sender ID</th>
+                            <th>Campaign Unique ID</th>
                             <th>Sender Name</th>
                             <th>Template Name</th>
-                            <th>Category</th>
                             <th>MSISDN</th>
                             <th>Status</th>
-                            <th>Vendor Ref Id</th>
-                            <th>Sent Date</th>
-                            <th>Sent Time</th>
+                            <th>Send Date</th>
+                            <th>Deliv Report Status</th>
+                            <th>Deliv Report Date</th>
+                            <th>Deliv Report Time</th>
+                            <th>Deliv Read Date</th>
+                            <th>Deliv Read Time</th>
                             <th>Note</th>
                         </tr>
                     </thead>
@@ -406,21 +408,23 @@ $(document).ready(function () {
                 d.campaign_id = $('#campaign_id').val();
             }
         },
-        order: [[3, 'desc'], [4, 'desc'], [2, 'desc']],
+        order: [[3, 'desc'], [2, 'desc']],
         columns: [
             { data: 'campaign_unique_id', name: 'campaign_kam.campaign_unique_id', className: 'kam-id' },
             { data: 'report_csv_uploaded_at', name: 'campaign_kam.report_csv_uploaded_at', className: 'kam-last-update' },
+            { data: 'unique_id', name: 'campaign_kam_reports.unique_id' },
+            { data: 'sender_id', name: 'campaign_kam_reports.sender_id' },
             { data: 'campaign_id', name: 'campaign_kam_reports.campaign_id' },
-            { data: 'created_date', name: 'campaign_kam_reports.created_date' },
-            { data: 'created_time', name: 'campaign_kam_reports.created_time' },
             { data: 'sender_name', name: 'campaign_kam_reports.sender_name' },
             { data: 'template_name', name: 'campaign_kam_reports.template_name' },
-            { data: 'category', name: 'campaign_kam_reports.category' },
             { data: 'msisdn', name: 'campaign_kam_reports.msisdn' },
             { data: 'status', name: 'campaign_kam_reports.status', orderable: false, searchable: false },
-            { data: 'vendor_ref_id', name: 'campaign_kam_reports.vendor_ref_id', orderable: false },
-            { data: 'sent_date', name: 'campaign_kam_reports.sent_date' },
-            { data: 'sent_time', name: 'campaign_kam_reports.sent_time' },
+            { data: 'send_date', name: 'campaign_kam_reports.send_date' },
+            { data: 'deliv_report_status', name: 'campaign_kam_reports.deliv_report_status' },
+            { data: 'deliv_report_date', name: 'campaign_kam_reports.deliv_report_date' },
+            { data: 'deliv_report_time', name: 'campaign_kam_reports.deliv_report_time' },
+            { data: 'deliv_read_date', name: 'campaign_kam_reports.deliv_read_date' },
+            { data: 'deliv_read_time', name: 'campaign_kam_reports.deliv_read_time' },
             { data: 'note', name: 'campaign_kam_reports.note', orderable: false }
         ],
         language: {
