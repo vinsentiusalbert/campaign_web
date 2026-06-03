@@ -26,8 +26,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('campaign_kam_reports', function (Blueprint $table) {
-            $table->dropIndex(['campaign_kam_id', 'send_date']);
-            $table->dropIndex(['campaign_kam_id', 'deliv_report_status']);
+            // $table->dropIndex(['campaign_kam_id', 'send_date']);
+            // $table->dropIndex(['campaign_kam_id', 'deliv_report_status']);
 
             $table->dropColumn([
                 'unique_id',
