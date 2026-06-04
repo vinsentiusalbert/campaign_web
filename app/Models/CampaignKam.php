@@ -15,6 +15,8 @@ class CampaignKam extends Model
         'campaign_unique_id',
         'campaign_usecase',
         'message_body',
+        'text_button',
+        'link_button',
         'kv_message_link',
         'campaign_type',
         'nama_file_whitelist',
@@ -63,7 +65,6 @@ class CampaignKam extends Model
         return $this->hasMany(CampaignKamReport::class, 'campaign_kam_id');
     }
 }
-
 
 
 

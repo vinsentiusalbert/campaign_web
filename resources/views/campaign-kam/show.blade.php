@@ -68,6 +68,16 @@
             <textarea class="form-control" rows="5" readonly>{!! strip_tags($campaign->message_body) !!}</textarea>
         </div>
 
+        <div class="form-group">
+            <label>Text Button</label>
+            <input type="text" class="form-control" value="{{ $campaign->text_button ?? '-' }}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Link Button</label>
+            <input type="text" class="form-control" value="{{ $campaign->link_button ?? '-' }}" readonly>
+        </div>
+
         {{-- KV MESSAGE IMAGE --}}
         <div class="form-group">
             <label>KV (Key-Visual) Message</label>

@@ -265,6 +265,8 @@ class CampaignKamController extends Controller
 
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
+            'text_button' => 'nullable|string|max:255',
+            'link_button' => 'nullable|string|max:255',
 
             // Image
             'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -450,6 +452,8 @@ class CampaignKamController extends Controller
             'sender_name' => $this->senderNameRules(),
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
+            'text_button' => 'nullable|string|max:255',
+            'link_button' => 'nullable|string|max:255',
             'kv_message_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'campaign_type' => 'nullable|in:Broadcast',
             'file_whitelist' => 'nullable|mimes:xls,xlsx|max:5120',
@@ -1031,7 +1035,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
 
 
 
