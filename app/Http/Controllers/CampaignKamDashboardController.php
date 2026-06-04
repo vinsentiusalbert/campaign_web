@@ -79,7 +79,7 @@ class CampaignKamDashboardController extends Controller
 
         $globalSaldo = $this->globalSaldo();
         $totalDelivered = $successfulReportCount;
-        $balanceTerpakai = $successfulReportCount * 309;
+        $balanceTerpakai = $successfulReportCount * 395;
         $saldoKam = (float) $globalSaldo->balance;
         $sisaSaldo = $saldoKam - $balanceTerpakai;
         $saldoHistories = KamGlobalSaldoHistory::query()

@@ -99,6 +99,19 @@
                 <textarea name="message_body" class="form-control summernote">{{ old('message_body', $campaign->message_body) }}</textarea>
             </div>
 
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="text_button">Text Button</label>
+                    <input type="text" id="text_button" name="text_button" class="form-control" value="{{ old('text_button', $campaign->text_button) }}">
+                    @error('text_button') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="link_button">Link Button</label>
+                    <input type="text" id="link_button" name="link_button" class="form-control" value="{{ old('link_button', $campaign->link_button) }}">
+                    @error('link_button') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+            </div>
+
             {{-- KV MESSAGE IMAGE --}}
             <div class="form-group">
                 <label>KV (Key-Visual) Message</label>
