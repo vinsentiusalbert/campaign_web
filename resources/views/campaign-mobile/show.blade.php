@@ -4,6 +4,7 @@
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css" rel="stylesheet">
 <style>
     .detail-label {
         font-weight: 600;
@@ -70,7 +71,7 @@
         {{-- MESSAGE BODY --}}
         <div>
             <div class="detail-label">Message Body</div>
-            <div class="message-box">{!! $campaign->message_body !!}</div>
+            <textarea class="form-control readonly-summernote">{!! $campaign->message_body !!}</textarea>
         </div>
 
         {{-- KV MESSAGE LINK (Preview Image) --}}
@@ -172,4 +173,15 @@
 
     </div>
 </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
+<script>
+$('.readonly-summernote').summernote({
+    height: 150,
+    toolbar: false,
+    disableResizeEditor: true
+}).summernote('disable');
+</script>
 @endsection
