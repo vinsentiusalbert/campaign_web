@@ -3,6 +3,7 @@
 @section('title', 'Detail Campaign Indihome')
 
 @section('css')
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css" rel="stylesheet">
 <style>
     .form-group label {
         font-weight: 600;
@@ -73,7 +74,7 @@
         {{-- MESSAGE BODY --}}
         <div class="form-group">
             <label>Message Body</label>
-            <textarea class="form-control" rows="5" readonly>{!! strip_tags($campaign->message_body) !!}</textarea>
+            <textarea class="form-control readonly-summernote">{!! $campaign->message_body !!}</textarea>
         </div>
 
         {{-- KV MESSAGE IMAGE --}}
@@ -205,8 +206,15 @@
 @endsection
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+$('.readonly-summernote').summernote({
+    height: 150,
+    toolbar: false,
+    disableResizeEditor: true
+}).summernote('disable');
+
 function previewImage(url) {
     Swal.fire({
         imageUrl: url,
