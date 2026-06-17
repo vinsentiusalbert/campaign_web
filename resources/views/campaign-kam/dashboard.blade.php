@@ -79,7 +79,7 @@
         font-weight: 600;
     }
 
-    .kam-chip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .kam-chip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
     .kam-chip {
         position: relative;
         overflow: hidden;
@@ -96,6 +96,8 @@
     .kam-chip-balance { background: linear-gradient(135deg, rgba(224,242,254,0.96) 0%, rgba(236,254,255,0.98) 100%); border-color: rgba(45,212,191,0.22); color: #0f766e; }
     .kam-chip-tosca { background: linear-gradient(135deg, rgba(204,251,241,0.92) 0%, rgba(224,242,254,0.98) 100%); border-color: rgba(45,212,191,0.24); color: #0f766e; }
     .kam-chip-failed { background: linear-gradient(135deg, rgba(254,226,226,0.90) 0%, rgba(255,241,242,0.98) 100%); border-color: rgba(248,113,113,0.22); color: #be123c; }
+    .kam-chip-sms { background: linear-gradient(135deg, rgba(255,247,237,0.96) 0%, rgba(255,251,235,0.98) 100%); border-color: rgba(251,146,60,0.26); color: #c2410c; }
+    .kam-chip-waba { background: linear-gradient(135deg, rgba(237,233,254,0.96) 0%, rgba(245,243,255,0.98) 100%); border-color: rgba(139,92,246,0.24); color: #6d28d9; }
 
     .kam-filter-head, .kam-table-head {
         display: flex;
@@ -202,6 +204,8 @@
                     <div class="kam-chip kam-chip-balance"><span class="kam-chip-label">Balance Terpakai</span><div class="kam-chip-value">Rp{{ number_format($balanceTerpakai, 0, ',', '.') }}</div></div>
                     <div class="kam-chip kam-chip-tosca"><span class="kam-chip-label">Jumlah Terkirim</span><div class="kam-chip-value">{{ number_format($totalDelivered, 0, ',', '.') }}</div></div>
                     <div class="kam-chip kam-chip-failed"><span class="kam-chip-label">Jumlah Gagal</span><div class="kam-chip-value">{{ number_format($failedReportCount, 0, ',', '.') }}</div></div>
+                    <div class="kam-chip kam-chip-sms"><span class="kam-chip-label">Terkirim SMS</span><div class="kam-chip-value">{{ number_format($smsDeliveredCount, 0, ',', '.') }}</div></div>
+                    <div class="kam-chip kam-chip-waba"><span class="kam-chip-label">Terkirim WABA</span><div class="kam-chip-value">{{ number_format($wabaDeliveredCount, 0, ',', '.') }}</div></div>
                 </div>
             </div>
         </div>
@@ -360,6 +364,7 @@
                             <th>Campaign Unique ID</th>
                             <th>Sender Name</th>
                             <th>Template Name</th>
+                            <th>Channel</th>
                             <th>MSISDN</th>
                             <th>Status</th>
                             <th>Send Date</th>
@@ -417,6 +422,7 @@ $(document).ready(function () {
             { data: 'campaign_id', name: 'campaign_kam_reports.campaign_id' },
             { data: 'sender_name', name: 'campaign_kam_reports.sender_name' },
             { data: 'template_name', name: 'campaign_kam_reports.template_name' },
+            { data: 'channel', name: 'campaign_kam.channel', orderable: false, searchable: false },
             { data: 'msisdn', name: 'campaign_kam_reports.msisdn' },
             { data: 'status', name: 'campaign_kam_reports.status', orderable: false, searchable: false },
             { data: 'send_date', name: 'campaign_kam_reports.send_date' },

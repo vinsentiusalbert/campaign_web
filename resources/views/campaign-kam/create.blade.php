@@ -90,6 +90,18 @@
                 {{-- <small class="text-muted">Campaign ID akan dibuat otomatis dari sender name dan nomor ID data.</small> --}}
             </div>
 
+            <div class="form-group">
+                <label for="channel">Channel</label>
+                <select name="channel" id="channel" class="form-control select2">
+                    @foreach($channelOptions as $channelOption)
+                        <option value="{{ $channelOption }}" {{ old('channel', 'WABA') === $channelOption ? 'selected' : '' }}>
+                            {{ $channelOption }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('channel') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+
             {{-- CAMPAIGN USECASE --}}
             <div class="form-group">
                 <label>Campaign Usecase</label>

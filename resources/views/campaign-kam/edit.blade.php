@@ -76,6 +76,18 @@
             </div>
 
             <div class="form-group">
+                <label for="channel">Channel</label>
+                <select name="channel" id="channel" class="form-control select2">
+                    @foreach($channelOptions as $channelOption)
+                        <option value="{{ $channelOption }}" {{ old('channel', $campaign->channel ?? 'WABA') === $channelOption ? 'selected' : '' }}>
+                            {{ $channelOption }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('channel') <small class="text-danger">{{ $message }}</small> @enderror
+            </div>
+
+            <div class="form-group">
                 <label>Campaign ID</label>
                 <input type="text" class="form-control" value="{{ $campaign->campaign_unique_id ?? '-' }}" readonly>
             </div>

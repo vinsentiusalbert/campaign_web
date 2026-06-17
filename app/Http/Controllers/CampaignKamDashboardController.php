@@ -12,6 +12,11 @@ use Yajra\DataTables\Facades\DataTables;
 
 class CampaignKamDashboardController extends Controller
 {
+    private const CHANNEL_PRICES = [
+        'WABA' => 395,
+        'SMS' => 100,
+    ];
+
     private function ensureKamDashboardAccess(): void
     {
         abort_unless(in_array(auth()->user()->role, ['Admin', 'Super', 'KAM']), 403);
@@ -66,20 +71,36 @@ class CampaignKamDashboardController extends Controller
         $totalRevenue = (float) $campaignRows->sum(fn ($row) => (float) ($row->total_revenue ?? 0));
 
         $reportRowsQuery = CampaignKamReport::query()
-            ->whereIn('campaign_kam_id', $campaigns->pluck('id'))
-            ->when($selectedCampaignId, fn ($query) => $query->where('campaign_kam_id', $selectedCampaignId));
+            ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
+            ->whereIn('campaign_kam_reports.campaign_kam_id', $campaigns->pluck('id'))
+            ->when($selectedCampaignId, fn ($query) => $query->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId));
 
         $successfulReportCount = (clone $reportRowsQuery)
-            ->whereRaw('LOWER(status) = ?', ['succeeded'])
+            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['succeeded'])
             ->count();
 
         $failedReportCount = (clone $reportRowsQuery)
-            ->whereRaw('LOWER(status) = ?', ['failed'])
+            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['failed'])
             ->count();
 
         $globalSaldo = $this->globalSaldo();
         $totalDelivered = $successfulReportCount;
-        $balanceTerpakai = $successfulReportCount * 395;
+        $successfulReportsByChannel = (clone $reportRowsQuery)
+            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['succeeded'])
+            ->selectRaw('UPPER(COALESCE(campaign_kam.channel, ?)) as channel_key, COUNT(*) as total_rows', ['WABA'])
+            ->groupBy('channel_key')
+            ->get();
+        $balanceTerpakai = (float) $successfulReportsByChannel->sum(function ($row) {
+            $channel = (string) $row->channel_key;
+            $price = self::CHANNEL_PRICES[$channel] ?? self::CHANNEL_PRICES['WABA'];
+
+            return ((int) $row->total_rows) * $price;
+        });
+        $successfulChannelCounts = $successfulReportsByChannel
+            ->pluck('total_rows', 'channel_key')
+            ->map(fn ($count) => (int) $count);
+        $smsDeliveredCount = $successfulChannelCounts->get('SMS', 0);
+        $wabaDeliveredCount = $successfulChannelCounts->get('WABA', 0);
         $saldoKam = (float) $globalSaldo->balance;
         $sisaSaldo = $saldoKam - $balanceTerpakai;
         $saldoHistories = KamGlobalSaldoHistory::query()
@@ -88,13 +109,15 @@ class CampaignKamDashboardController extends Controller
             ->latest()
             ->limit(10)
             ->get();
-        $tableRowCount = (clone $reportRowsQuery)->count();
+        $tableRowCount = (clone $reportRowsQuery)->count('campaign_kam_reports.id');
         $canManageSaldo = $this->canManageSaldo();
 
         return view('campaign-kam.dashboard', compact(
             'campaigns',
             'selectedCampaignId',
             'totalDelivered',
+            'smsDeliveredCount',
+            'wabaDeliveredCount',
             'totalRead',
             'totalRevenue',
             'sisaSaldo',
@@ -159,6 +182,7 @@ class CampaignKamDashboardController extends Controller
                 'campaign_kam_reports.*',
                 'campaign_kam.campaign_unique_id as campaign_unique_id',
                 'campaign_kam.report_csv_uploaded_at as report_csv_uploaded_at',
+                'campaign_kam.channel as channel',
             ]);
 
         return DataTables::of($query)
@@ -173,6 +197,7 @@ class CampaignKamDashboardController extends Controller
             ->editColumn('campaign_id', fn ($row) => $row->campaign_id ?? '-')
             ->editColumn('sender_name', fn ($row) => $row->sender_name ?? '-')
             ->editColumn('template_name', fn ($row) => $row->template_name ?? '-')
+            ->editColumn('channel', fn ($row) => $row->channel ?? 'WABA')
             ->editColumn('msisdn', fn ($row) => $row->msisdn ?? '-')
             ->editColumn('status', function ($row) {
                 $status = strtolower((string) $row->status);
