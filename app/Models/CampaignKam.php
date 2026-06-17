@@ -12,6 +12,7 @@ class CampaignKam extends Model
         'user_id',
         'template_name',
         'sender_name',
+        'channel',
         'campaign_unique_id',
         'campaign_usecase',
         'message_body',
@@ -65,7 +66,6 @@ class CampaignKam extends Model
         return $this->hasMany(CampaignKamReport::class, 'campaign_kam_id');
     }
 }
-
 
 
 

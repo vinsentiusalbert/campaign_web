@@ -46,6 +46,11 @@
             <input type="text" class="form-control" value="{{ $campaign->sender_name ?? '-' }}" readonly>
         </div>
 
+        <div class="form-group">
+            <label>Channel</label>
+            <input type="text" class="form-control" value="{{ $campaign->channel ?? 'WABA' }}" readonly>
+        </div>
+
         {{-- CAMPAIGN USECASE --}}
         <div class="form-group">
             <label>Campaign Usecase</label>

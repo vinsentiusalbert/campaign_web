@@ -61,6 +61,11 @@ class CampaignKamController extends Controller
         'PT KAM Via Telkomsel',
     ];
 
+    private const CHANNEL_OPTIONS = [
+        'SMS',
+        'WABA',
+    ];
+
     private function ensureCampaignAccess(CampaignKam $campaign): void
     {
         $this->ensureKamModuleAccess();
@@ -114,6 +119,7 @@ class CampaignKamController extends Controller
         }
 
         return DataTables::of($query)
+            ->editColumn('channel', fn ($row) => $row->channel ?? 'WABA')
             ->addColumn('status', function ($row) {
                 if ($row->status == 1) {
                     return '<span class="badge badge-success">Active</span>';
@@ -245,9 +251,10 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $senderNameOptions = self::SENDER_NAME_OPTIONS;
+        $channelOptions = self::CHANNEL_OPTIONS;
         $vendors = $this->vendorOptions();
 
-        return view('campaign-kam.create', compact('senderNameOptions', 'vendors'));
+        return view('campaign-kam.create', compact('senderNameOptions', 'channelOptions', 'vendors'));
     }
 
     /**
@@ -262,6 +269,7 @@ class CampaignKamController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'sender_name' => $this->senderNameRules(),
+            'channel' => 'required|string|in:' . implode(',', self::CHANNEL_OPTIONS),
 
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
@@ -432,9 +440,10 @@ class CampaignKamController extends Controller
         $campaign = CampaignKam::findOrFail($id);
         $this->ensureCampaignAccess($campaign);
         $senderNameOptions = self::SENDER_NAME_OPTIONS;
+        $channelOptions = self::CHANNEL_OPTIONS;
         $vendors = $this->vendorOptions();
 
-        return view('campaign-kam.edit', compact('campaign', 'senderNameOptions', 'vendors'));
+        return view('campaign-kam.edit', compact('campaign', 'senderNameOptions', 'channelOptions', 'vendors'));
     }
 
     /**
@@ -450,6 +459,7 @@ class CampaignKamController extends Controller
         // VALIDASI
         $validated = $request->validate([
             'sender_name' => $this->senderNameRules(),
+            'channel' => 'required|string|in:' . implode(',', self::CHANNEL_OPTIONS),
             'campaign_usecase' => 'nullable|string|max:255',
             'message_body' => 'nullable|string',
             'text_button' => 'nullable|string|max:255',
@@ -1035,8 +1045,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
-
 
 
 

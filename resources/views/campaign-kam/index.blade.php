@@ -70,6 +70,7 @@
                         <th>Campaign ID</th>
                         <th>Vendor</th>
                         <th>Sender Name</th>
+                        <th>Channel</th>
                         <th>Usecase</th>
                         <th>Campaign Type</th>
                         <th>Start</th>
@@ -213,6 +214,7 @@ $(document).ready(function () {
             { data: 'campaign_unique_id', name: 'campaign_unique_id' },
             { data: 'vendor', name: 'vendor' },
             { data: 'sender_name', name: 'sender_name' },
+            { data: 'channel', name: 'channel' },
             { data: 'campaign_usecase', name: 'campaign_usecase' },
             { data: 'campaign_type', name: 'campaign_type' },
             { data: 'periode_campaign_start', name: 'periode_campaign_start' },

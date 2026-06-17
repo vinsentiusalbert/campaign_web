@@ -154,4 +154,3 @@ Route::middleware(['auth', 'checkrole:User,Admin,Super'])->group(function () {
         Route::post('/{id}/report-link', [CampaignWabaInteraktifController::class, 'updateReportLink'])->name('update-report-link');
     });
 });
-
