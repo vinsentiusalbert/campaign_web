@@ -79,19 +79,23 @@
         font-weight: 600;
     }
 
-    .kam-chip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .kam-chip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .kam-chip {
         position: relative;
         overflow: hidden;
         border-radius: 16px;
-        padding: 16px;
+        min-height: 118px;
+        padding: 20px 18px;
         border: 1px solid rgba(148,163,184,0.16);
         box-shadow: var(--kam-shadow-soft);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .kam-chip::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: currentColor; opacity: 0.14; }
-    .kam-chip-label { display: block; opacity: 0.75; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
-    .kam-chip-value { font-size: 26px; font-weight: 700; line-height: 1.08; letter-spacing: -0.04em; }
+    .kam-chip-label { display: block; opacity: 0.75; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .kam-chip-value { font-size: clamp(1.4rem, 1.45vw, 1.7rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; overflow-wrap: anywhere; }
     .kam-chip-saldo { background: linear-gradient(135deg, rgba(219,234,254,0.96) 0%, rgba(239,246,255,0.98) 100%); border-color: rgba(96,165,250,0.26); color: #1d4ed8; }
     .kam-chip-balance { background: linear-gradient(135deg, rgba(224,242,254,0.96) 0%, rgba(236,254,255,0.98) 100%); border-color: rgba(45,212,191,0.22); color: #0f766e; }
     .kam-chip-tosca { background: linear-gradient(135deg, rgba(204,251,241,0.92) 0%, rgba(224,242,254,0.98) 100%); border-color: rgba(45,212,191,0.24); color: #0f766e; }
@@ -119,6 +123,37 @@
         border: 1px solid var(--kam-border-strong);
         background: #fff;
         color: #1e293b;
+    }
+
+    .kam-filter-card .select2-container {
+        width: 100% !important;
+    }
+
+    .kam-filter-card .select2-container .select2-selection--single {
+        height: 48px !important;
+        border-radius: 14px !important;
+        border: 1px solid var(--kam-border-strong) !important;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+    }
+
+    .kam-filter-card .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1e293b;
+        line-height: 46px !important;
+        padding-left: 0;
+        padding-right: 24px;
+    }
+
+    .kam-filter-card .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 46px !important;
+        right: 10px;
+    }
+
+    .kam-filter-card .select2-container--default.select2-container--focus .select2-selection--single,
+    .kam-filter-card .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: rgba(45,212,191,0.44) !important;
+        box-shadow: 0 0 0 0.22rem rgba(45,212,191,0.1);
     }
 
     .kam-filter-body .form-control:focus, .kam-admin-card .form-control:focus {
@@ -176,6 +211,10 @@
         min-width: 0;
     }
 
+    @media (max-width: 1199.98px) {
+        .kam-chip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     @media (max-width: 991.98px) {
         .kam-chip-grid { grid-template-columns: 1fr; }
         .kam-hero { padding: 22px 18px; }
@@ -189,7 +228,7 @@
 <div class="kam-dashboard-shell">
     <section class="kam-hero">
         <div class="row align-items-center">
-            <div class="col-lg-7 mb-4 mb-lg-0">
+            <div class="col-lg-6 mb-4 mb-lg-0">
                 <div class="kam-hero-eyebrow"><i class="fas fa-chart-line"></i>Dashboard Monitoring KAM</div>
                 <h1 class="kam-hero-title">Dashboard KAM</h1>
                 <p class="kam-hero-subtitle">Pantau ringkasan campaign dan telusuri detail report CSV dalam satu halaman.</p>
@@ -198,7 +237,7 @@
                     <div class="kam-hero-pill"><i class="fas fa-database"></i>{{ number_format($tableRowCount, 0, ',', '.') }} record report</div>
                 </div>
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-6">
                 <div class="kam-chip-grid">
                     <div class="kam-chip kam-chip-saldo"><span class="kam-chip-label">Sisa Saldo</span><div class="kam-chip-value">Rp{{ number_format($sisaSaldo, 0, ',', '.') }}</div></div>
                     <div class="kam-chip kam-chip-balance"><span class="kam-chip-label">Balance Terpakai</span><div class="kam-chip-value">Rp{{ number_format($balanceTerpakai, 0, ',', '.') }}</div></div>
@@ -221,9 +260,9 @@
         <div class="kam-filter-body">
             <form method="GET" action="{{ route('campaign-kam-dashboard.index') }}">
                 <div class="form-row align-items-end">
-                    <div class="form-group col-lg-9 mb-lg-0">
+                    <div class="form-group col-lg-5 mb-lg-0">
                         <label for="campaign_id">ID Iklan</label>
-                        <select name="campaign_id" id="campaign_id" class="form-control">
+                        <select name="campaign_id" id="campaign_id" class="form-control kam-select2">
                             <option value="">Semua Campaign</option>
                             @foreach($campaigns as $campaign)
                                 <option value="{{ $campaign->id }}" {{ (string) $selectedCampaignId === (string) $campaign->id ? 'selected' : '' }}>
@@ -232,10 +271,18 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="form-group col-md-6 col-lg-2 mb-lg-0">
+                        <label for="update_from">Update Dari</label>
+                        <input type="date" name="update_from" id="update_from" class="form-control" value="{{ request('update_from') }}">
+                    </div>
+                    <div class="form-group col-md-6 col-lg-2 mb-lg-0">
+                        <label for="update_to">Update Sampai</label>
+                        <input type="date" name="update_to" id="update_to" class="form-control" value="{{ request('update_to') }}">
+                    </div>
                     <div class="form-group col-lg-3 mb-0">
                         <div class="kam-filter-actions">
                             <button type="submit" class="btn btn-primary kam-btn-primary flex-fill">Terapkan</button>
-                            @if($selectedCampaignId)
+                            @if($selectedCampaignId || request('update_from') || request('update_to'))
                                 <a href="{{ route('campaign-kam-dashboard.index') }}" class="btn btn-outline-secondary flex-fill">Reset</a>
                             @endif
                         </div>
@@ -269,6 +316,8 @@
                     <form method="POST" action="{{ route('campaign-kam-dashboard.update-saldo') }}" id="kam-saldo-form">
                         @csrf
                         <input type="hidden" name="campaign_id" value="{{ $selectedCampaignId }}">
+                        <input type="hidden" name="update_from" value="{{ request('update_from') }}">
+                        <input type="hidden" name="update_to" value="{{ request('update_to') }}">
                         <div class="modal-header">
                             <h5 class="modal-title" id="saldoModalLabel">Tambah Saldo Global KAM</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -351,7 +400,11 @@
                 <p class="kam-section-note">Menampilkan Detail Report untuk setiap Iklan.</p>
             </div>
             <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
-                <a href="{{ route('campaign-kam-dashboard.download-csv', array_filter(['campaign_id' => $selectedCampaignId])) }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ route('campaign-kam-dashboard.download-csv', array_filter([
+                    'campaign_id' => $selectedCampaignId,
+                    'update_from' => request('update_from'),
+                    'update_to' => request('update_to'),
+                ])) }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-download"></i> Download CSV
                 </a>
                 <div class="kam-table-meta"><i class="fas fa-table"></i><span>{{ number_format($tableRowCount, 0, ',', '.') }} record</span></div>
@@ -389,10 +442,17 @@
 </div>
 @endsection
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script>
 $(document).ready(function () {
+    $('#campaign_id').select2({
+        width: '100%',
+        placeholder: 'Cari ID Iklan',
+        allowClear: true
+    });
+
     if ($('#kam-saldo-history-table').length) {
         $('#kam-saldo-history-table').DataTable({
             paging: false,
@@ -416,6 +476,8 @@ $(document).ready(function () {
             url: "{{ route('campaign-kam-dashboard.data') }}",
             data: function (d) {
                 d.campaign_id = $('#campaign_id').val();
+                d.update_from = $('#update_from').val();
+                d.update_to = $('#update_to').val();
             }
         },
         order: [[3, 'desc'], [2, 'desc']],

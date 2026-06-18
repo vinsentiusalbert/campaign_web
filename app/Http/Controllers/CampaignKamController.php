@@ -105,7 +105,9 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $campaigns = CampaignKam::orderBy('created_at', 'desc')->paginate(10);
-        return view('campaign-kam.index', compact('campaigns'));
+        $senderNameOptions = self::SENDER_NAME_OPTIONS;
+
+        return view('campaign-kam.index', compact('campaigns', 'senderNameOptions'));
     }
     public function data(Request $request)
     {
@@ -116,6 +118,10 @@ class CampaignKamController extends Controller
         // Jika bukan admin, hanya lihat data sendiri
         if (! in_array(auth()->user()->role, ['Admin', 'Super', 'KAM'])) {
             $query->where('campaign_kam.user_id', auth()->id());
+        }
+
+        if ($request->filled('sender_name')) {
+            $query->where('campaign_kam.sender_name', $request->sender_name);
         }
 
         return DataTables::of($query)
@@ -1045,7 +1051,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
 
 
 
