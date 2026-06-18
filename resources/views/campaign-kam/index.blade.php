@@ -2,7 +2,6 @@
 @section('title') Campaign KAM @endsection
 
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
 
 <style>
@@ -21,6 +20,11 @@
     .btn-group-sm > .btn, .btn-sm { margin: 0 2px; }
     .badge-ok { background-color: #28a745; color: #fff; }
     .badge-no { background-color: #6c757d; color: #fff; }
+
+    .kam-toolbar-filter {
+        min-width: 260px;
+    }
+
 </style>
 @endsection
 
@@ -57,9 +61,19 @@
             <a href="{{ route('campaign-kam.template.download') }}" class="btn btn-outline-secondary mb-2">
                 <i class="fas fa-file-excel"></i> Download Template XLSX
             </a>
-            <a href="{{ route('campaign-kam.create') }}" class="btn btn-info">
-                <i class="fas fa-plus"></i> Tambah KAM
-            </a>
+            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                <div class="kam-toolbar-filter mb-2">
+                    <select id="sender_name_filter" class="form-control">
+                        <option value="">Semua Sender Name</option>
+                        @foreach($senderNameOptions as $senderNameOption)
+                            <option value="{{ $senderNameOption }}">{{ $senderNameOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <a href="{{ route('campaign-kam.create') }}" class="btn btn-info mb-2">
+                    <i class="fas fa-plus"></i> Tambah KAM
+                </a>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -197,7 +211,6 @@ $(function () {
 </script>
 <script>
 $(document).ready(function () {
-
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -207,7 +220,12 @@ $(document).ready(function () {
     let table = $('#campaignKamTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('campaign-kam.data') }}",
+        ajax: {
+            url: "{{ route('campaign-kam.data') }}",
+            data: function (d) {
+                d.sender_name = $('#sender_name_filter').val();
+            }
+        },
         order: [[0, 'desc']],
         columns: [
             { data: 'id', name: 'id' },
@@ -230,6 +248,10 @@ $(document).ready(function () {
         columnDefs: [
             { targets: '_all', className: 'text-center' }
         ]
+    });
+
+    $('#sender_name_filter').on('change', function () {
+        table.ajax.reload();
     });
 
     // DELETE

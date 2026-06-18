@@ -8,6 +8,7 @@ use App\Models\KamGlobalSaldo;
 use App\Models\KamGlobalSaldoHistory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -48,6 +49,7 @@ class CampaignKamDashboardController extends Controller
         $campaignsQuery = $this->accessibleCampaignsQuery();
         $campaigns = $campaignsQuery->get(['id', 'user_id', 'campaign_unique_id', 'template_name', 'sender_name']);
         $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+        [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
         $campaignTableQuery = CampaignKam::query()
             ->whereIn('id', $campaigns->pluck('id'))
             ->orderByDesc('report_csv_uploaded_at')
@@ -56,6 +58,8 @@ class CampaignKamDashboardController extends Controller
         if ($selectedCampaignId) {
             $campaignTableQuery->where('id', $selectedCampaignId);
         }
+
+        $this->applyLastUpdateFilter($campaignTableQuery, $updateFrom, $updateTo, 'report_csv_uploaded_at');
 
         $campaignRows = $campaignTableQuery->get();
         $selectedCampaign = $selectedCampaignId ? $campaigns->firstWhere('id', $selectedCampaignId) : null;
@@ -69,6 +73,8 @@ class CampaignKamDashboardController extends Controller
             ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
             ->whereIn('campaign_kam_reports.campaign_kam_id', $campaigns->pluck('id'))
             ->when($selectedCampaignId, fn ($query) => $query->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId));
+
+        $this->applyLastUpdateFilter($reportRowsQuery, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
 
         $successfulReportCount = (clone $reportRowsQuery)
             ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['succeeded'])
@@ -110,6 +116,8 @@ class CampaignKamDashboardController extends Controller
         return view('campaign-kam.dashboard', compact(
             'campaigns',
             'selectedCampaignId',
+            'updateFrom',
+            'updateTo',
             'totalDelivered',
             'smsDeliveredCount',
             'wabaDeliveredCount',
@@ -156,7 +164,11 @@ class CampaignKamDashboardController extends Controller
         });
 
         return redirect()
-            ->route('campaign-kam-dashboard.index', array_filter(['campaign_id' => $request->campaign_id]))
+            ->route('campaign-kam-dashboard.index', array_filter([
+                'campaign_id' => $request->campaign_id,
+                'update_from' => $request->update_from,
+                'update_to' => $request->update_to,
+            ]))
             ->with('success', 'Saldo global KAM berhasil ditambahkan.');
     }
 
@@ -277,8 +289,9 @@ class CampaignKamDashboardController extends Controller
     {
         $campaignIds = $this->accessibleCampaignsQuery()->pluck('id');
         $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+        [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
 
-        return CampaignKamReport::query()
+        $query = CampaignKamReport::query()
             ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
             ->whereIn('campaign_kam_reports.campaign_kam_id', $campaignIds)
             ->when($selectedCampaignId, function ($builder) use ($selectedCampaignId) {
@@ -290,5 +303,43 @@ class CampaignKamDashboardController extends Controller
                 'campaign_kam.report_csv_uploaded_at as report_csv_uploaded_at',
                 'campaign_kam.channel as channel',
             ]);
+
+        $this->applyLastUpdateFilter($query, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
+
+        return $query;
+    }
+
+    private function resolveLastUpdateRange(Request $request): array
+    {
+        $from = $this->parseDateBoundary($request->input('update_from'), false);
+        $to = $this->parseDateBoundary($request->input('update_to'), true);
+
+        return [$from, $to];
+    }
+
+    private function parseDateBoundary(?string $value, bool $endOfDay): ?Carbon
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('Y-m-d', $value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        return $endOfDay ? $date->endOfDay() : $date->startOfDay();
+    }
+
+    private function applyLastUpdateFilter($query, ?Carbon $from, ?Carbon $to, string $column): void
+    {
+        if ($from) {
+            $query->where($column, '>=', $from);
+        }
+
+        if ($to) {
+            $query->where($column, '<=', $to);
+        }
     }
 }
