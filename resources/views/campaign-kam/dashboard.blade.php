@@ -347,10 +347,15 @@
     <section class="kam-table-card">
         <div class="kam-table-head">
             <div>
-                <h2 class="kam-section-title">Isi Report CSV</h2>
-                <p class="kam-section-note">Menampilkan baris data asli dari file CSV yang sudah di-upload.</p>
+                <h2 class="kam-section-title">Detail Report</h2>
+                <p class="kam-section-note">Menampilkan Detail Report untuk setiap Iklan.</p>
             </div>
-            <div class="kam-table-meta"><i class="fas fa-table"></i><span>{{ number_format($tableRowCount, 0, ',', '.') }} record</span></div>
+            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                <a href="{{ route('campaign-kam-dashboard.download-csv', array_filter(['campaign_id' => $selectedCampaignId])) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-download"></i> Download CSV
+                </a>
+                <div class="kam-table-meta"><i class="fas fa-table"></i><span>{{ number_format($tableRowCount, 0, ',', '.') }} record</span></div>
+            </div>
         </div>
         <div class="kam-table-body">
             <div class="table-responsive kam-table-wrap">

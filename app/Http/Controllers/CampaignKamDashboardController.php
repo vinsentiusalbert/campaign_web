@@ -6,6 +6,7 @@ use App\Models\CampaignKam;
 use App\Models\CampaignKamReport;
 use App\Models\KamGlobalSaldo;
 use App\Models\KamGlobalSaldoHistory;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -29,13 +30,7 @@ class CampaignKamDashboardController extends Controller
 
     private function accessibleCampaignsQuery()
     {
-        $campaignsQuery = CampaignKam::query()->orderBy('campaign_unique_id');
-
-        if (auth()->user()->role === 'KAM') {
-            $campaignsQuery->where('user_id', auth()->id());
-        }
-
-        return $campaignsQuery;
+        return CampaignKam::query()->orderBy('campaign_unique_id');
     }
 
     private function globalSaldo(): KamGlobalSaldo
@@ -169,21 +164,7 @@ class CampaignKamDashboardController extends Controller
     {
         $this->ensureKamDashboardAccess();
 
-        $campaignIds = $this->accessibleCampaignsQuery()->pluck('id');
-        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
-
-        $query = CampaignKamReport::query()
-            ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
-            ->whereIn('campaign_kam_reports.campaign_kam_id', $campaignIds)
-            ->when($selectedCampaignId, function ($builder) use ($selectedCampaignId) {
-                $builder->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId);
-            })
-            ->select([
-                'campaign_kam_reports.*',
-                'campaign_kam.campaign_unique_id as campaign_unique_id',
-                'campaign_kam.report_csv_uploaded_at as report_csv_uploaded_at',
-                'campaign_kam.channel as channel',
-            ]);
+        $query = $this->detailReportQuery($request);
 
         return DataTables::of($query)
             ->editColumn('campaign_unique_id', fn ($row) => $row->campaign_unique_id ?? '-')
@@ -222,5 +203,92 @@ class CampaignKamDashboardController extends Controller
             })
             ->rawColumns(['status', 'note'])
             ->make(true);
+    }
+
+    public function downloadCsv(Request $request): StreamedResponse
+    {
+        $this->ensureKamDashboardAccess();
+
+        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+        $selectedCampaign = $selectedCampaignId
+            ? CampaignKam::query()->select('id', 'campaign_unique_id')->find($selectedCampaignId)
+            : null;
+        $fileName = $selectedCampaign?->campaign_unique_id
+            ? 'kam_report_detail_' . strtolower(str_replace(' ', '_', $selectedCampaign->campaign_unique_id)) . '.csv'
+            : 'kam_report_detail_all_campaigns.csv';
+
+        $headers = [
+            'Campaign Unique ID',
+            'Last Update',
+            'Unique ID',
+            'Sender ID',
+            'Campaign ID',
+            'Sender Name',
+            'Template Name',
+            'Channel',
+            'MSISDN',
+            'Status',
+            'Send Date',
+            'Deliv Report Status',
+            'Deliv Report Date',
+            'Deliv Report Time',
+            'Deliv Read Date',
+            'Deliv Read Time',
+            'Note',
+        ];
+
+        return response()->streamDownload(function () use ($request, $headers) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $headers);
+
+            $this->detailReportQuery($request)
+                ->orderBy('campaign_kam_reports.id')
+                ->chunk(1000, function ($rows) use ($handle) {
+                    foreach ($rows as $row) {
+                        fputcsv($handle, [
+                            $row->campaign_unique_id ?? '-',
+                            $row->report_csv_uploaded_at ? date('d-m-Y H:i', strtotime($row->report_csv_uploaded_at)) : 'Belum upload CSV',
+                            $row->unique_id ?? '-',
+                            $row->sender_id ?? '-',
+                            $row->campaign_id ?? '-',
+                            $row->sender_name ?? '-',
+                            $row->template_name ?? '-',
+                            $row->channel ?? 'WABA',
+                            $row->msisdn ?? '-',
+                            $row->status ?? '-',
+                            $row->send_date ? date('d-m-Y', strtotime($row->send_date)) : '-',
+                            $row->deliv_report_status ?? '-',
+                            $row->deliv_report_date ? date('d-m-Y', strtotime($row->deliv_report_date)) : '-',
+                            $row->deliv_report_time ?? '-',
+                            $row->deliv_read_date ? date('d-m-Y', strtotime($row->deliv_read_date)) : '-',
+                            $row->deliv_read_time ?? '-',
+                            $row->note ?? '-',
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function detailReportQuery(Request $request)
+    {
+        $campaignIds = $this->accessibleCampaignsQuery()->pluck('id');
+        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+
+        return CampaignKamReport::query()
+            ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
+            ->whereIn('campaign_kam_reports.campaign_kam_id', $campaignIds)
+            ->when($selectedCampaignId, function ($builder) use ($selectedCampaignId) {
+                $builder->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId);
+            })
+            ->select([
+                'campaign_kam_reports.*',
+                'campaign_kam.campaign_unique_id as campaign_unique_id',
+                'campaign_kam.report_csv_uploaded_at as report_csv_uploaded_at',
+                'campaign_kam.channel as channel',
+            ]);
     }
 }

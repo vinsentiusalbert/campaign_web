@@ -114,6 +114,7 @@ Route::middleware(['auth', 'checkrole:Super,Admin,Tsel'])->group(function () {
 Route::middleware(['auth', 'checkrole:KAM,Admin,Super'])->group(function () {
     Route::get('/campaign-kam-dashboard', [CampaignKamDashboardController::class, 'index'])->name('campaign-kam-dashboard.index');
     Route::get('/campaign-kam-dashboard/data', [CampaignKamDashboardController::class, 'data'])->name('campaign-kam-dashboard.data');
+    Route::get('/campaign-kam-dashboard/download-csv', [CampaignKamDashboardController::class, 'downloadCsv'])->name('campaign-kam-dashboard.download-csv');
     Route::post('/campaign-kam-dashboard/saldo', [CampaignKamDashboardController::class, 'updateSaldo'])->name('campaign-kam-dashboard.update-saldo');
 
     Route::prefix('campaign-kam')->name('campaign-kam.')->group(function () {
