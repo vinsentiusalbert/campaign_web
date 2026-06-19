@@ -17,6 +17,7 @@ class CampaignKamDashboardController extends Controller
     private const CHANNEL_PRICES = [
         'WABA' => 395,
         'SMS' => 100,
+        'MMS' => 180,
     ];
 
     private function ensureKamDashboardAccess(): void

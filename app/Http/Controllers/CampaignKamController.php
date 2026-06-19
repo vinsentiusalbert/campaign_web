@@ -63,6 +63,7 @@ class CampaignKamController extends Controller
 
     private const CHANNEL_OPTIONS = [
         'SMS',
+        'MMS',
         'WABA',
     ];
 
@@ -1051,7 +1052,6 @@ class CampaignKamController extends Controller
     }
 
 }
-
 
 
 
