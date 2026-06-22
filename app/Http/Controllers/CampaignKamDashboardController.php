@@ -49,23 +49,31 @@ class CampaignKamDashboardController extends Controller
 
         $campaignsQuery = $this->accessibleCampaignsQuery();
         $campaigns = $campaignsQuery->get(['id', 'user_id', 'campaign_unique_id', 'template_name', 'sender_name']);
-        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+        $selectedCampaignIds = $this->resolveSelectedCampaignIds($request, $campaigns->pluck('id')->all());
         [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
         $campaignTableQuery = CampaignKam::query()
             ->whereIn('id', $campaigns->pluck('id'))
             ->orderByDesc('report_csv_uploaded_at')
             ->orderBy('campaign_unique_id');
 
-        if ($selectedCampaignId) {
-            $campaignTableQuery->where('id', $selectedCampaignId);
+        if ($selectedCampaignIds !== []) {
+            $campaignTableQuery->whereIn('id', $selectedCampaignIds);
         }
 
         $this->applyLastUpdateFilter($campaignTableQuery, $updateFrom, $updateTo, 'report_csv_uploaded_at');
 
         $campaignRows = $campaignTableQuery->get();
-        $selectedCampaign = $selectedCampaignId ? $campaigns->firstWhere('id', $selectedCampaignId) : null;
-        $selectedCampaignModel = $selectedCampaignId ? $campaignRows->first() : null;
-        $showMissingUploadWarning = $selectedCampaignId && $selectedCampaignModel && $selectedCampaignModel->report_csv_uploaded_at === null;
+        $selectedCampaigns = $selectedCampaignIds === []
+            ? collect()
+            : $campaigns->whereIn('id', $selectedCampaignIds)->values();
+        $selectedCampaign = $selectedCampaigns->count() === 1 ? $selectedCampaigns->first() : null;
+        $selectedCampaignModel = $selectedCampaign ? $campaignRows->firstWhere('id', $selectedCampaign->id) : null;
+        $showMissingUploadWarning = $selectedCampaign && $selectedCampaignModel && $selectedCampaignModel->report_csv_uploaded_at === null;
+        $selectedCampaignSummary = match (true) {
+            $selectedCampaigns->isEmpty() => 'Semua campaign aktif',
+            $selectedCampaigns->count() === 1 => $selectedCampaign?->campaign_unique_id ?? 'Campaign dipilih',
+            default => $selectedCampaigns->count() . ' campaign dipilih',
+        };
 
         $totalRead = (int) $campaignRows->sum(fn ($row) => (int) ($row->total_read ?? 0));
         $totalRevenue = (float) $campaignRows->sum(fn ($row) => (float) ($row->total_revenue ?? 0));
@@ -73,7 +81,7 @@ class CampaignKamDashboardController extends Controller
         $reportRowsQuery = CampaignKamReport::query()
             ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
             ->whereIn('campaign_kam_reports.campaign_kam_id', $campaigns->pluck('id'))
-            ->when($selectedCampaignId, fn ($query) => $query->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId));
+            ->when($selectedCampaignIds !== [], fn ($query) => $query->whereIn('campaign_kam_reports.campaign_kam_id', $selectedCampaignIds));
 
         $this->applyLastUpdateFilter($reportRowsQuery, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
 
@@ -116,7 +124,7 @@ class CampaignKamDashboardController extends Controller
 
         return view('campaign-kam.dashboard', compact(
             'campaigns',
-            'selectedCampaignId',
+            'selectedCampaignIds',
             'updateFrom',
             'updateTo',
             'totalDelivered',
@@ -132,6 +140,7 @@ class CampaignKamDashboardController extends Controller
             'saldoKam',
             'saldoHistories',
             'selectedCampaign',
+            'selectedCampaignSummary',
             'showMissingUploadWarning',
             'selectedCampaignModel'
         ));
@@ -222,13 +231,19 @@ class CampaignKamDashboardController extends Controller
     {
         $this->ensureKamDashboardAccess();
 
-        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
-        $selectedCampaign = $selectedCampaignId
-            ? CampaignKam::query()->select('id', 'campaign_unique_id')->find($selectedCampaignId)
-            : null;
-        $fileName = $selectedCampaign?->campaign_unique_id
-            ? 'kam_report_detail_' . strtolower(str_replace(' ', '_', $selectedCampaign->campaign_unique_id)) . '.csv'
-            : 'kam_report_detail_all_campaigns.csv';
+        $selectedCampaignIds = $this->resolveSelectedCampaignIds($request, $this->accessibleCampaignsQuery()->pluck('id')->all());
+        $selectedCampaigns = $selectedCampaignIds === []
+            ? collect()
+            : CampaignKam::query()
+                ->whereIn('id', $selectedCampaignIds)
+                ->select('id', 'campaign_unique_id')
+                ->orderBy('campaign_unique_id')
+                ->get();
+        $fileName = match (true) {
+            $selectedCampaigns->count() === 1 => 'kam_report_detail_' . strtolower(str_replace(' ', '_', $selectedCampaigns->first()->campaign_unique_id)) . '.csv',
+            $selectedCampaigns->count() > 1 => 'kam_report_detail_selected_campaigns.csv',
+            default => 'kam_report_detail_all_campaigns.csv',
+        };
 
         $headers = [
             'Campaign Unique ID',
@@ -289,14 +304,14 @@ class CampaignKamDashboardController extends Controller
     private function detailReportQuery(Request $request)
     {
         $campaignIds = $this->accessibleCampaignsQuery()->pluck('id');
-        $selectedCampaignId = $request->filled('campaign_id') ? (int) $request->campaign_id : null;
+        $selectedCampaignIds = $this->resolveSelectedCampaignIds($request, $campaignIds->all());
         [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
 
         $query = CampaignKamReport::query()
             ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
             ->whereIn('campaign_kam_reports.campaign_kam_id', $campaignIds)
-            ->when($selectedCampaignId, function ($builder) use ($selectedCampaignId) {
-                $builder->where('campaign_kam_reports.campaign_kam_id', $selectedCampaignId);
+            ->when($selectedCampaignIds !== [], function ($builder) use ($selectedCampaignIds) {
+                $builder->whereIn('campaign_kam_reports.campaign_kam_id', $selectedCampaignIds);
             })
             ->select([
                 'campaign_kam_reports.*',
@@ -308,6 +323,20 @@ class CampaignKamDashboardController extends Controller
         $this->applyLastUpdateFilter($query, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
 
         return $query;
+    }
+
+    private function resolveSelectedCampaignIds(Request $request, array $allowedIds): array
+    {
+        $selectedIds = $request->input('campaign_id', []);
+        $selectedIds = is_array($selectedIds) ? $selectedIds : [$selectedIds];
+
+        return collect($selectedIds)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => in_array($id, $allowedIds, true))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function resolveLastUpdateRange(Request $request): array
