@@ -129,13 +129,13 @@
         width: 100% !important;
     }
 
-    .kam-filter-card .select2-container .select2-selection--single {
-        height: 48px !important;
+    .kam-filter-card .select2-container .select2-selection--single,
+    .kam-filter-card .select2-container .select2-selection--multiple {
+        min-height: 48px !important;
         border-radius: 14px !important;
         border: 1px solid var(--kam-border-strong) !important;
-        display: flex;
-        align-items: center;
-        padding: 0 14px;
+        padding: 6px 14px;
+        background: #fff;
     }
 
     .kam-filter-card .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -143,6 +143,27 @@
         line-height: 46px !important;
         padding-left: 0;
         padding-right: 24px;
+    }
+
+    .kam-filter-card .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0;
+    }
+
+    .kam-filter-card .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        margin-top: 0;
+        background: #e6fffa;
+        border: 1px solid rgba(45,212,191,0.22);
+        color: #0f766e;
+        border-radius: 999px;
+        padding: 4px 10px;
+    }
+
+    .kam-filter-card .select2-container--default .select2-search--inline .select2-search__field {
+        margin-top: 0;
+        height: 26px;
     }
 
     .kam-filter-card .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -233,7 +254,7 @@
                 <h1 class="kam-hero-title">Dashboard KAM</h1>
                 <p class="kam-hero-subtitle">Pantau ringkasan campaign dan telusuri detail report CSV dalam satu halaman.</p>
                 <div class="kam-hero-pills">
-                    <div class="kam-hero-pill"><i class="fas fa-bullhorn"></i>{{ $selectedCampaignId ? ($selectedCampaign?->campaign_unique_id ?? 'Campaign dipilih') : 'Semua campaign aktif' }}</div>
+                    <div class="kam-hero-pill"><i class="fas fa-bullhorn"></i>{{ $selectedCampaignSummary }}</div>
                     <div class="kam-hero-pill"><i class="fas fa-database"></i>{{ number_format($tableRowCount, 0, ',', '.') }} record report</div>
                 </div>
             </div>
@@ -254,7 +275,7 @@
         <div class="kam-filter-head">
             <div>
                 <h2 class="kam-section-title">Filter Data</h2>
-                <p class="kam-section-note">Pilih satu campaign untuk melihat isi CSV per ID iklan, atau biarkan kosong untuk melihat semua data upload.</p>
+                <p class="kam-section-note">Pilih satu atau beberapa campaign untuk melihat isi CSV per ID iklan, atau biarkan kosong untuk melihat semua data upload.</p>
             </div>
         </div>
         <div class="kam-filter-body">
@@ -262,10 +283,9 @@
                 <div class="form-row align-items-end">
                     <div class="form-group col-lg-5 mb-lg-0">
                         <label for="campaign_id">ID Iklan</label>
-                        <select name="campaign_id" id="campaign_id" class="form-control kam-select2">
-                            <option value="">Semua Campaign</option>
+                        <select name="campaign_id[]" id="campaign_id" class="form-control kam-select2" multiple>
                             @foreach($campaigns as $campaign)
-                                <option value="{{ $campaign->id }}" {{ (string) $selectedCampaignId === (string) $campaign->id ? 'selected' : '' }}>
+                                <option value="{{ $campaign->id }}" {{ in_array($campaign->id, $selectedCampaignIds ?? [], true) ? 'selected' : '' }}>
                                     {{ $campaign->campaign_unique_id }} - {{ $campaign->template_name ?? $campaign->sender_name }}
                                 </option>
                             @endforeach
@@ -282,7 +302,7 @@
                     <div class="form-group col-lg-3 mb-0">
                         <div class="kam-filter-actions">
                             <button type="submit" class="btn btn-primary kam-btn-primary flex-fill">Terapkan</button>
-                            @if($selectedCampaignId || request('update_from') || request('update_to'))
+                            @if(!empty($selectedCampaignIds) || request('update_from') || request('update_to'))
                                 <a href="{{ route('campaign-kam-dashboard.index') }}" class="btn btn-outline-secondary flex-fill">Reset</a>
                             @endif
                         </div>
@@ -315,7 +335,11 @@
                 <div class="modal-content">
                     <form method="POST" action="{{ route('campaign-kam-dashboard.update-saldo') }}" id="kam-saldo-form">
                         @csrf
-                        <input type="hidden" name="campaign_id" value="{{ $selectedCampaignId }}">
+                        <div id="kam-saldo-campaign-inputs">
+                            @foreach(($selectedCampaignIds ?? []) as $selectedCampaignId)
+                                <input type="hidden" name="campaign_id[]" value="{{ $selectedCampaignId }}">
+                            @endforeach
+                        </div>
                         <input type="hidden" name="update_from" value="{{ request('update_from') }}">
                         <input type="hidden" name="update_to" value="{{ request('update_to') }}">
                         <div class="modal-header">
@@ -389,7 +413,7 @@
         <div class="alert alert-warning kam-alert">Data report CSV untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong> belum di-upload.</div>
     @endif
 
-    @if($selectedCampaignId && !$showMissingUploadWarning)
+    @if($selectedCampaign && !$showMissingUploadWarning)
         <div class="alert alert-info kam-alert">Last update data untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong>: <strong>{{ $selectedCampaignModel?->report_csv_uploaded_at ? $selectedCampaignModel->report_csv_uploaded_at->format('d-m-Y H:i') : '-' }}</strong></div>
     @endif
 
@@ -401,7 +425,7 @@
             </div>
             <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
                 <a href="{{ route('campaign-kam-dashboard.download-csv', array_filter([
-                    'campaign_id' => $selectedCampaignId,
+                    'campaign_id' => $selectedCampaignIds ?? [],
                     'update_from' => request('update_from'),
                     'update_to' => request('update_to'),
                 ])) }}" class="btn btn-outline-primary btn-sm">
@@ -449,9 +473,22 @@
 $(document).ready(function () {
     $('#campaign_id').select2({
         width: '100%',
-        placeholder: 'Cari ID Iklan',
+        placeholder: 'Pilih ID Iklan',
         allowClear: true
     });
+
+    function syncSaldoCampaignInputs() {
+        const container = $('#kam-saldo-campaign-inputs');
+        const selectedValues = $('#campaign_id').val() || [];
+
+        container.empty();
+
+        selectedValues.forEach(function (value) {
+            container.append('<input type="hidden" name="campaign_id[]" value="' + value + '">');
+        });
+    }
+
+    syncSaldoCampaignInputs();
 
     if ($('#kam-saldo-history-table').length) {
         $('#kam-saldo-history-table').DataTable({
@@ -518,6 +555,7 @@ $(document).ready(function () {
     });
 
     $('#kam-saldo-form').on('submit', function () {
+        syncSaldoCampaignInputs();
         const submitButton = $('#kam-saldo-submit');
 
         if (submitButton.prop('disabled')) {
@@ -528,6 +566,7 @@ $(document).ready(function () {
     });
 
     $('#campaign_id').on('change', function () {
+        syncSaldoCampaignInputs();
         if (!this.form) {
             table.ajax.reload();
         }
