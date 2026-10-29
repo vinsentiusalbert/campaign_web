@@ -410,11 +410,11 @@
     </section>
 
     @if($showMissingUploadWarning)
-        <div class="alert alert-warning kam-alert">Data report CSV untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong> belum di-upload.</div>
+        <div class="alert alert-warning kam-alert">Belum ada report dengan Unique ID yang cocok untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong>.</div>
     @endif
 
     @if($selectedCampaign && !$showMissingUploadWarning)
-        <div class="alert alert-info kam-alert">Last update data untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong>: <strong>{{ $selectedCampaignModel?->report_csv_uploaded_at ? $selectedCampaignModel->report_csv_uploaded_at->format('d-m-Y H:i') : '-' }}</strong></div>
+        <div class="alert alert-info kam-alert">Report tersedia untuk campaign <strong>{{ $selectedCampaign?->campaign_unique_id ?? '-' }}</strong>. Last update: <strong>{{ $selectedCampaignModel?->report_last_updated_at ? \Illuminate\Support\Carbon::parse($selectedCampaignModel->report_last_updated_at)->format('d-m-Y H:i') : '-' }}</strong></div>
     @endif
 
     <section class="kam-table-card">
@@ -520,7 +520,7 @@ $(document).ready(function () {
         order: [[3, 'desc'], [2, 'desc']],
         columns: [
             { data: 'campaign_unique_id', name: 'campaign_kam.campaign_unique_id', className: 'kam-id' },
-            { data: 'report_csv_uploaded_at', name: 'campaign_kam.report_csv_uploaded_at', className: 'kam-last-update' },
+            { data: 'report_csv_uploaded_at', name: 'report_csv_uploaded_at', searchable: false, className: 'kam-last-update' },
             { data: 'unique_id', name: 'campaign_kam_reports.unique_id' },
             { data: 'sender_id', name: 'campaign_kam_reports.sender_id' },
             { data: 'campaign_id', name: 'campaign_kam_reports.campaign_id' },
