@@ -20,10 +20,10 @@ class CampaignKamDashboardController extends Controller
     {
         return $query->leftJoinSub(
             CampaignKamReport::query()
-                ->selectRaw('unique_id, MAX(COALESCE(updated_at, created_at)) as last_updated_at')
-                ->groupBy('unique_id'),
+                ->selectRaw('campaign_id, MAX(COALESCE(updated_at, created_at)) as last_updated_at')
+                ->groupBy('campaign_id'),
             'report_updates',
-            'report_updates.unique_id',
+            'report_updates.campaign_id',
             '=',
             'campaign_kam.unique_id_report'
         );
@@ -107,7 +107,7 @@ class CampaignKamDashboardController extends Controller
         $totalRevenue = (float) $campaignRows->sum(fn ($row) => (float) ($row->total_revenue ?? 0));
 
         $reportRowsQuery = CampaignKamReport::query()
-            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.unique_id')
+            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.campaign_id')
             ->whereIn('campaign_kam.id', $campaignRows->pluck('id'));
 
         $reportStats = $this->reportStatistics($reportRowsQuery);
@@ -334,7 +334,7 @@ class CampaignKamDashboardController extends Controller
         $reportCampaigns = $campaignQuery->get();
 
         $query = CampaignKamReport::query()
-            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.unique_id')
+            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.campaign_id')
             ->whereIn('campaign_kam.id', $reportCampaigns->pluck('id'))
             ->select([
                 'campaign_kam_reports.*',

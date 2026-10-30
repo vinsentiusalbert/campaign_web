@@ -64,7 +64,7 @@ class CampaignKam extends Model
 
     public function reports()
     {
-        return $this->hasMany(CampaignKamReport::class, 'unique_id', 'unique_id_report');
+        return $this->hasMany(CampaignKamReport::class, 'campaign_id', 'unique_id_report');
     }
 }
 

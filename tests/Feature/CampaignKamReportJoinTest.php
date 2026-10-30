@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class CampaignKamReportJoinTest extends TestCase
 {
-    public function test_reports_follow_the_user_supplied_joiner_instead_of_the_legacy_id(): void
+    public function test_reports_join_on_campaign_id_instead_of_unique_id_or_legacy_id(): void
     {
         $database = new Capsule;
         $database->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
@@ -28,6 +28,7 @@ class CampaignKamReportJoinTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('campaign_kam_id');
             $table->string('unique_id');
+            $table->string('campaign_id');
             $table->string('status')->nullable();
             $table->timestamps();
         });
@@ -36,7 +37,8 @@ class CampaignKamReportJoinTest extends TestCase
         $campaign = CampaignKam::create(['unique_id_report' => 'USER-REPORT-001']);
         $report = CampaignKamReport::create([
             'campaign_kam_id' => $emptyCampaign->id,
-            'unique_id' => 'USER-REPORT-001',
+            'unique_id' => 'MESSAGE-001',
+            'campaign_id' => 'USER-REPORT-001',
         ]);
 
         $this->assertNull($emptyCampaign->fresh()->unique_id_report);
@@ -58,15 +60,15 @@ class CampaignKamReportJoinTest extends TestCase
         $this->assertNull($externalReportCampaign->report_csv_uploaded_at);
         $this->assertSame($report->updated_at->format('Y-m-d H:i:s'), $externalReportCampaign->report_last_updated_at);
 
-        foreach (['succeeded', 'SUCCEEDED', 'failed', 'FAILED', 'pending'] as $status) {
-            CampaignKamReport::create(['campaign_kam_id' => $emptyCampaign->id, 'unique_id' => 'USER-REPORT-001', 'status' => $status]);
+        foreach (['succeeded', 'SUCCEEDED', 'failed', 'FAILED', 'pending'] as $index => $status) {
+            CampaignKamReport::create(['campaign_kam_id' => $emptyCampaign->id, 'unique_id' => 'MESSAGE-'.($index + 2), 'campaign_id' => 'USER-REPORT-001', 'status' => $status]);
         }
         $sms = CampaignKam::create(['unique_id_report' => 'SMS-REPORT', 'channel' => 'sms']);
-        CampaignKamReport::create(['campaign_kam_id' => $sms->id, 'unique_id' => 'SMS-REPORT', 'status' => 'succeeded']);
-        CampaignKamReport::create(['campaign_kam_id' => $sms->id, 'unique_id' => 'UNMATCHED', 'status' => 'succeeded']);
+        CampaignKamReport::create(['campaign_kam_id' => $sms->id, 'unique_id' => 'MESSAGE-SMS', 'campaign_id' => 'SMS-REPORT', 'status' => 'succeeded']);
+        CampaignKamReport::create(['campaign_kam_id' => $sms->id, 'unique_id' => 'USER-REPORT-001', 'campaign_id' => 'UNMATCHED', 'status' => 'succeeded']);
 
         $statistics = new \ReflectionMethod(\App\Http\Controllers\CampaignKamDashboardController::class, 'reportStatistics');
-        $query = CampaignKamReport::query()->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.unique_id');
+        $query = CampaignKamReport::query()->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.campaign_id');
         $stats = $statistics->invoke(new \App\Http\Controllers\CampaignKamDashboardController, clone $query)->keyBy('channel_key');
         $this->assertSame(7, (int) $stats->sum('total_rows'));
         $this->assertSame(3, (int) $stats->sum('succeeded_rows'));

@@ -43,7 +43,7 @@ class CampaignKamReport extends Model
 
     public function campaign()
     {
-        return $this->belongsTo(CampaignKam::class, 'unique_id', 'unique_id_report');
+        return $this->belongsTo(CampaignKam::class, 'campaign_id', 'unique_id_report');
     }
 
     public function getMsisdnAttribute($value): ?string

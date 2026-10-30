@@ -285,9 +285,9 @@ $(document).ready(function () {
 function activateCampaign(id) {
     Swal.fire({
         title: 'Activate campaign?',
-        text: 'Masukkan Unique ID Report untuk campaign ini.',
+        text: 'Masukkan Campaign ID untuk campaign ini.',
         input: 'text',
-        inputLabel: 'Unique ID Report',
+        inputLabel: 'Campaign ID',
         inputAttributes: { maxlength: 255, autocomplete: 'off' },
         icon: 'question',
         showCancelButton: true,
@@ -296,7 +296,7 @@ function activateCampaign(id) {
         confirmButtonText: 'Simpan & Activate',
         showLoaderOnConfirm: true,
         allowOutsideClick: () => !Swal.isLoading(),
-        inputValidator: (value) => !value.trim() ? 'Unique ID Report wajib diisi.' : undefined,
+        inputValidator: (value) => !value.trim() ? 'Campaign ID wajib diisi.' : undefined,
         preConfirm: async (value) => {
             try {
                 return await $.post(`/campaign-kam/${id}/activate`, {
