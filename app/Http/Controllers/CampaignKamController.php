@@ -684,21 +684,21 @@ class CampaignKamController extends Controller
         }
 
         // One campaign has one report joiner; every uploaded row must share it.
-        $reportUniqueIds = collect($rowsToInsert)->pluck('unique_id')->uniqueStrict();
-        $reportUniqueId = $reportUniqueIds->first();
-        if ($reportUniqueIds->count() !== 1 || $reportUniqueId === null || $reportUniqueId === '' || mb_strlen($reportUniqueId) > 255) {
+        $reportCampaignIds = collect($rowsToInsert)->pluck('campaign_id')->uniqueStrict();
+        $reportCampaignId = $reportCampaignIds->first();
+        if ($reportCampaignIds->count() !== 1 || $reportCampaignId === null || $reportCampaignId === '' || mb_strlen($reportCampaignId) > 255) {
             return redirect()
                 ->route('campaign-kam.index')
-                ->with('error', 'Report harus berisi satu unique_id yang sama pada seluruh baris, tidak kosong, dan maksimal 255 karakter.');
+                ->with('error', 'Report harus berisi satu campaign_id yang sama pada seluruh baris, tidak kosong, dan maksimal 255 karakter.');
         }
 
         $csvFile = $validated['report_csv'];
 
-        DB::transaction(function () use ($campaign, $rowsToInsert, $csvFile, $reportUniqueId) {
+        DB::transaction(function () use ($campaign, $rowsToInsert, $csvFile, $reportCampaignId) {
             $campaign = CampaignKam::whereKey($campaign->id)->lockForUpdate()->firstOrFail();
-            if ($campaign->unique_id_report !== $reportUniqueId) {
+            if ($campaign->unique_id_report !== $reportCampaignId) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'report_csv' => 'Unique ID pada file harus sama dengan Unique ID Report yang diisi pada campaign.',
+                    'report_csv' => 'Campaign ID pada file harus sama dengan Campaign ID yang diisi pada campaign.',
                 ]);
             }
 

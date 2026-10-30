@@ -52,6 +52,7 @@ class CampaignKamDashboardStatisticsTest extends TestCase
             Capsule::schema()->create('campaign_kam_reports', function (Blueprint $table) {
                 $table->id();
                 $table->string('unique_id');
+                $table->string('campaign_id');
                 $table->string('status')->nullable();
                 $table->timestamps();
             });
@@ -68,7 +69,7 @@ class CampaignKamDashboardStatisticsTest extends TestCase
                 ['id' => 3, 'campaign_unique_id' => 'C', 'unique_id_report' => null, 'channel' => 'MMS', 'total_read' => 1, 'total_revenue' => 300, 'report_csv_uploaded_at' => '2026-10-01 12:00:00'],
             ]);
             foreach ([['A', 'succeeded', '2026-10-01'], ['A', 'SUCCEEDED', '2026-10-02'], ['A', 'failed', '2026-10-02'], ['A', null, '2026-10-02'], ['B', 'succeeded', '2026-10-03'], ['UNMATCHED', 'succeeded', '2026-10-03']] as [$id, $status, $date]) {
-                Capsule::table('campaign_kam_reports')->insert(['unique_id' => $id, 'status' => $status, 'created_at' => $date.' 00:00:00', 'updated_at' => null]);
+                Capsule::table('campaign_kam_reports')->insert(['unique_id' => 'MESSAGE-'.$id, 'campaign_id' => $id, 'status' => $status, 'created_at' => $date.' 00:00:00', 'updated_at' => null]);
             }
             $controller = new CampaignKamDashboardController;
             foreach ([
@@ -97,7 +98,8 @@ class CampaignKamDashboardStatisticsTest extends TestCase
             $csv = ob_get_clean();
             $lines = array_map('str_getcsv', explode("\n", trim($csv)));
             $this->assertCount(5, $lines);
-            $this->assertSame('A', $lines[1][2]);
+            $this->assertSame('MESSAGE-A', $lines[1][2]);
+            $this->assertSame('A', $lines[1][4]);
             $this->assertSame('02-10-2026 00:00', $lines[1][1]);
         } finally {
             Facade::clearResolvedInstances();
