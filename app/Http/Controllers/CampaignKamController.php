@@ -114,7 +114,8 @@ class CampaignKamController extends Controller
     {
         $this->ensureKamModuleAccess();
         $query = CampaignKam::query()
-            ->select('campaign_kam.*');
+            ->select('campaign_kam.*')
+            ->withExists('reports');
 
         // Jika bukan admin, hanya lihat data sendiri
         if (! in_array(auth()->user()->role, ['Admin', 'Super', 'KAM'])) {
@@ -141,7 +142,9 @@ class CampaignKamController extends Controller
             })
             ->editColumn('report_csv_file', function ($row) {
                 if (!$row->report_csv_file) {
-                    return '<span class="text-muted">Belum upload</span>';
+                    return $row->reports_exists
+                        ? '<span class="badge badge-success">Report tersedia</span>'
+                        : '<span class="text-muted">Belum ada report</span>';
                 }
 
                 $url = asset('storage/campaign/report-csv/' . $row->report_csv_file);
@@ -680,9 +683,25 @@ class CampaignKamController extends Controller
             ];
         }
 
+        // One campaign has one report joiner; every uploaded row must share it.
+        $reportUniqueIds = collect($rowsToInsert)->pluck('unique_id')->uniqueStrict();
+        $reportUniqueId = $reportUniqueIds->first();
+        if ($reportUniqueIds->count() !== 1 || $reportUniqueId === null || $reportUniqueId === '' || mb_strlen($reportUniqueId) > 255) {
+            return redirect()
+                ->route('campaign-kam.index')
+                ->with('error', 'Report harus berisi satu unique_id yang sama pada seluruh baris, tidak kosong, dan maksimal 255 karakter.');
+        }
+
         $csvFile = $validated['report_csv'];
 
-        DB::transaction(function () use ($campaign, $rowsToInsert, $csvFile) {
+        DB::transaction(function () use ($campaign, $rowsToInsert, $csvFile, $reportUniqueId) {
+            $campaign = CampaignKam::whereKey($campaign->id)->lockForUpdate()->firstOrFail();
+            if ($campaign->unique_id_report !== $reportUniqueId) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'report_csv' => 'Unique ID pada file harus sama dengan Unique ID Report yang diisi pada campaign.',
+                ]);
+            }
+
             if ($campaign->report_csv_file) {
                 Storage::disk('public')->delete('campaign/report-csv/'.$campaign->report_csv_file);
             }
@@ -840,7 +859,7 @@ class CampaignKamController extends Controller
     }
 
 
-    public function activate($id)
+    public function activate(Request $request, $id)
     {
         $this->ensureKamModuleAccess();
         $campaign = CampaignKam::findOrFail($id);
@@ -850,6 +869,15 @@ class CampaignKamController extends Controller
             abort(403);
         }
 
+        $validated = $request->validate([
+            'unique_id_report' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('campaign_kam', 'unique_id_report')->ignore($campaign->id)],
+        ]);
+
+        if ($campaign->status == 1) {
+            return response()->json(['message' => 'Campaign sudah aktif.'], 409);
+        }
+
+        $campaign->unique_id_report = $validated['unique_id_report'];
         $campaign->status = 1;
         $campaign->save();
 

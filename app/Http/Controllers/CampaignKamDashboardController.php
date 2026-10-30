@@ -14,11 +14,36 @@ use Yajra\DataTables\Facades\DataTables;
 
 class CampaignKamDashboardController extends Controller
 {
+    private const REPORT_LAST_UPDATE = 'COALESCE(report_updates.last_updated_at, campaign_kam.report_csv_uploaded_at)';
+
+    private function joinReportUpdates($query)
+    {
+        return $query->leftJoinSub(
+            CampaignKamReport::query()
+                ->selectRaw('unique_id, MAX(COALESCE(updated_at, created_at)) as last_updated_at')
+                ->groupBy('unique_id'),
+            'report_updates',
+            'report_updates.unique_id',
+            '=',
+            'campaign_kam.unique_id_report'
+        );
+    }
+
     private const CHANNEL_PRICES = [
         'WABA' => 395,
         'SMS' => 100,
         'MMS' => 180,
     ];
+
+    private function reportStatistics($query)
+    {
+        return $query
+            ->selectRaw('UPPER(COALESCE(campaign_kam.channel, ?)) as channel_key, COUNT(*) as total_rows,
+                SUM(CASE WHEN LOWER(campaign_kam_reports.status) = ? THEN 1 ELSE 0 END) as succeeded_rows,
+                SUM(CASE WHEN LOWER(campaign_kam_reports.status) = ? THEN 1 ELSE 0 END) as failed_rows', ['WABA', 'succeeded', 'failed'])
+            ->groupBy('channel_key')
+            ->get();
+    }
 
     private function ensureKamDashboardAccess(): void
     {
@@ -47,28 +72,31 @@ class CampaignKamDashboardController extends Controller
     {
         $this->ensureKamDashboardAccess();
 
-        $campaignsQuery = $this->accessibleCampaignsQuery();
-        $campaigns = $campaignsQuery->get(['id', 'user_id', 'campaign_unique_id', 'template_name', 'sender_name']);
+        $campaignsQuery = $this->joinReportUpdates($this->accessibleCampaignsQuery());
+        $campaigns = $campaignsQuery->select(['campaign_kam.*'])
+            ->withExists('reports')
+            ->selectRaw(self::REPORT_LAST_UPDATE . ' as report_last_updated_at')
+            ->get();
         $selectedCampaignIds = $this->resolveSelectedCampaignIds($request, $campaigns->pluck('id')->all());
         [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
-        $campaignTableQuery = CampaignKam::query()
-            ->whereIn('id', $campaigns->pluck('id'))
-            ->orderByDesc('report_csv_uploaded_at')
-            ->orderBy('campaign_unique_id');
-
-        if ($selectedCampaignIds !== []) {
-            $campaignTableQuery->whereIn('id', $selectedCampaignIds);
-        }
-
-        $this->applyLastUpdateFilter($campaignTableQuery, $updateFrom, $updateTo, 'report_csv_uploaded_at');
-
-        $campaignRows = $campaignTableQuery->get();
+        // Reuse campaign timestamps already loaded for the picker and warning.
+        $campaignRows = $campaigns->filter(function ($campaign) use ($selectedCampaignIds, $updateFrom, $updateTo) {
+            if ($selectedCampaignIds !== [] && ! in_array($campaign->id, $selectedCampaignIds, true)) {
+                return false;
+            }
+            $updatedAt = $campaign->report_last_updated_at;
+            if (($updateFrom || $updateTo) && $updatedAt === null) {
+                return false;
+            }
+            return (! $updateFrom || $updatedAt >= $updateFrom->format('Y-m-d H:i:s'))
+                && (! $updateTo || $updatedAt <= $updateTo->format('Y-m-d H:i:s'));
+        });
         $selectedCampaigns = $selectedCampaignIds === []
             ? collect()
             : $campaigns->whereIn('id', $selectedCampaignIds)->values();
         $selectedCampaign = $selectedCampaigns->count() === 1 ? $selectedCampaigns->first() : null;
-        $selectedCampaignModel = $selectedCampaign ? $campaignRows->firstWhere('id', $selectedCampaign->id) : null;
-        $showMissingUploadWarning = $selectedCampaign && $selectedCampaignModel && $selectedCampaignModel->report_csv_uploaded_at === null;
+        $selectedCampaignModel = $selectedCampaign;
+        $showMissingUploadWarning = $selectedCampaign && ! $selectedCampaign->reports_exists;
         $selectedCampaignSummary = match (true) {
             $selectedCampaigns->isEmpty() => 'Semua campaign aktif',
             $selectedCampaigns->count() === 1 => $selectedCampaign?->campaign_unique_id ?? 'Campaign dipilih',
@@ -79,35 +107,23 @@ class CampaignKamDashboardController extends Controller
         $totalRevenue = (float) $campaignRows->sum(fn ($row) => (float) ($row->total_revenue ?? 0));
 
         $reportRowsQuery = CampaignKamReport::query()
-            ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
-            ->whereIn('campaign_kam_reports.campaign_kam_id', $campaigns->pluck('id'))
-            ->when($selectedCampaignIds !== [], fn ($query) => $query->whereIn('campaign_kam_reports.campaign_kam_id', $selectedCampaignIds));
+            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.unique_id')
+            ->whereIn('campaign_kam.id', $campaignRows->pluck('id'));
 
-        $this->applyLastUpdateFilter($reportRowsQuery, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
-
-        $successfulReportCount = (clone $reportRowsQuery)
-            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['succeeded'])
-            ->count();
-
-        $failedReportCount = (clone $reportRowsQuery)
-            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['failed'])
-            ->count();
+        $reportStats = $this->reportStatistics($reportRowsQuery);
+        $successfulReportCount = (int) $reportStats->sum('succeeded_rows');
+        $failedReportCount = (int) $reportStats->sum('failed_rows');
 
         $globalSaldo = $this->globalSaldo();
         $totalDelivered = $successfulReportCount;
-        $successfulReportsByChannel = (clone $reportRowsQuery)
-            ->whereRaw('LOWER(campaign_kam_reports.status) = ?', ['succeeded'])
-            ->selectRaw('UPPER(COALESCE(campaign_kam.channel, ?)) as channel_key, COUNT(*) as total_rows', ['WABA'])
-            ->groupBy('channel_key')
-            ->get();
-        $balanceTerpakai = (float) $successfulReportsByChannel->sum(function ($row) {
+        $balanceTerpakai = (float) $reportStats->sum(function ($row) {
             $channel = (string) $row->channel_key;
             $price = self::CHANNEL_PRICES[$channel] ?? self::CHANNEL_PRICES['WABA'];
 
-            return ((int) $row->total_rows) * $price;
+            return ((int) $row->succeeded_rows) * $price;
         });
-        $successfulChannelCounts = $successfulReportsByChannel
-            ->pluck('total_rows', 'channel_key')
+        $successfulChannelCounts = $reportStats
+            ->pluck('succeeded_rows', 'channel_key')
             ->map(fn ($count) => (int) $count);
         $smsDeliveredCount = $successfulChannelCounts->get('SMS', 0);
         $wabaDeliveredCount = $successfulChannelCounts->get('WABA', 0);
@@ -119,7 +135,7 @@ class CampaignKamDashboardController extends Controller
             ->latest()
             ->limit(10)
             ->get();
-        $tableRowCount = (clone $reportRowsQuery)->count('campaign_kam_reports.id');
+        $tableRowCount = (int) $reportStats->sum('total_rows');
         $canManageSaldo = $this->canManageSaldo();
 
         return view('campaign-kam.dashboard', compact(
@@ -193,7 +209,7 @@ class CampaignKamDashboardController extends Controller
             ->editColumn('report_csv_uploaded_at', function ($row) {
                 return $row->report_csv_uploaded_at
                     ? date('d-m-Y H:i', strtotime($row->report_csv_uploaded_at))
-                    : 'Belum upload CSV';
+                    : '-';
             })
             ->editColumn('unique_id', fn ($row) => $row->unique_id ?? '-')
             ->editColumn('sender_id', fn ($row) => $row->sender_id ?? '-')
@@ -275,7 +291,7 @@ class CampaignKamDashboardController extends Controller
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $row->campaign_unique_id ?? '-',
-                            $row->report_csv_uploaded_at ? date('d-m-Y H:i', strtotime($row->report_csv_uploaded_at)) : 'Belum upload CSV',
+                            $row->report_csv_uploaded_at ? date('d-m-Y H:i', strtotime($row->report_csv_uploaded_at)) : '-',
                             $row->unique_id ?? '-',
                             $row->sender_id ?? '-',
                             $row->campaign_id ?? '-',
@@ -307,20 +323,36 @@ class CampaignKamDashboardController extends Controller
         $selectedCampaignIds = $this->resolveSelectedCampaignIds($request, $campaignIds->all());
         [$updateFrom, $updateTo] = $this->resolveLastUpdateRange($request);
 
+        // Resolve campaign-level timestamps before DataTables counts/sorts report rows.
+        // Joining the aggregate to every report makes its count query very expensive.
+        $campaignQuery = CampaignKam::query()
+            ->whereIn('campaign_kam.id', $selectedCampaignIds !== [] ? $selectedCampaignIds : $campaignIds)
+            ->select('campaign_kam.id')
+            ->selectRaw(self::REPORT_LAST_UPDATE . ' as report_last_updated_at');
+        $this->joinReportUpdates($campaignQuery);
+        $this->applyLastUpdateFilter($campaignQuery, $updateFrom, $updateTo, DB::raw(self::REPORT_LAST_UPDATE));
+        $reportCampaigns = $campaignQuery->get();
+
         $query = CampaignKamReport::query()
-            ->leftJoin('campaign_kam', 'campaign_kam.id', '=', 'campaign_kam_reports.campaign_kam_id')
-            ->whereIn('campaign_kam_reports.campaign_kam_id', $campaignIds)
-            ->when($selectedCampaignIds !== [], function ($builder) use ($selectedCampaignIds) {
-                $builder->whereIn('campaign_kam_reports.campaign_kam_id', $selectedCampaignIds);
-            })
+            ->join('campaign_kam', 'campaign_kam.unique_id_report', '=', 'campaign_kam_reports.unique_id')
+            ->whereIn('campaign_kam.id', $reportCampaigns->pluck('id'))
             ->select([
                 'campaign_kam_reports.*',
                 'campaign_kam.campaign_unique_id as campaign_unique_id',
-                'campaign_kam.report_csv_uploaded_at as report_csv_uploaded_at',
                 'campaign_kam.channel as channel',
             ]);
 
-        $this->applyLastUpdateFilter($query, $updateFrom, $updateTo, 'campaign_kam.report_csv_uploaded_at');
+        $timestampCases = [];
+        $timestampBindings = [];
+        foreach ($reportCampaigns as $campaign) {
+            $timestampCases[] = 'WHEN ? THEN ?';
+            $timestampBindings[] = $campaign->id;
+            $timestampBindings[] = $campaign->report_last_updated_at;
+        }
+        $timestampSql = $timestampCases === []
+            ? 'NULL'
+            : 'CASE campaign_kam.id ' . implode(' ', $timestampCases) . ' ELSE NULL END';
+        $query->selectRaw($timestampSql . ' as report_csv_uploaded_at', $timestampBindings);
 
         return $query;
     }
@@ -362,7 +394,7 @@ class CampaignKamDashboardController extends Controller
         return $endOfDay ? $date->endOfDay() : $date->startOfDay();
     }
 
-    private function applyLastUpdateFilter($query, ?Carbon $from, ?Carbon $to, string $column): void
+    private function applyLastUpdateFilter($query, ?Carbon $from, ?Carbon $to, $column): void
     {
         if ($from) {
             $query->where($column, '>=', $from);

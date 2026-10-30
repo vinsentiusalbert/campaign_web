@@ -11,6 +11,7 @@ class CampaignKamReport extends Model
     protected $fillable = [
         'campaign_kam_id',
         'unique_id',
+        'unique_id_original',
         'sender_id',
         'campaign_id',
         'created_date',
@@ -42,7 +43,7 @@ class CampaignKamReport extends Model
 
     public function campaign()
     {
-        return $this->belongsTo(CampaignKam::class, 'campaign_kam_id');
+        return $this->belongsTo(CampaignKam::class, 'unique_id', 'unique_id_report');
     }
 
     public function getMsisdnAttribute($value): ?string

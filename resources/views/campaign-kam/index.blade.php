@@ -285,24 +285,34 @@ $(document).ready(function () {
 function activateCampaign(id) {
     Swal.fire({
         title: 'Activate campaign?',
-        text: 'Campaign ini akan diaktifkan',
+        text: 'Masukkan Unique ID Report untuk campaign ini.',
+        input: 'text',
+        inputLabel: 'Unique ID Report',
+        inputAttributes: { maxlength: 255, autocomplete: 'off' },
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, activate'
+        confirmButtonText: 'Simpan & Activate',
+        showLoaderOnConfirm: true,
+        allowOutsideClick: () => !Swal.isLoading(),
+        inputValidator: (value) => !value.trim() ? 'Unique ID Report wajib diisi.' : undefined,
+        preConfirm: async (value) => {
+            try {
+                return await $.post(`/campaign-kam/${id}/activate`, {
+                    _token: '{{ csrf_token() }}',
+                    unique_id_report: value.trim()
+                });
+            } catch (xhr) {
+                Swal.showValidationMessage(xhr.responseJSON?.errors?.unique_id_report?.[0]
+                    ?? xhr.responseJSON?.message ?? 'Gagal activate campaign');
+                return false;
+            }
+        }
     }).then((result) => {
         if (result.isConfirmed) {
-            $.post(
-                `/campaign-kam/${id}/activate`,
-                {_token: '{{ csrf_token() }}'},
-                function (res) {
-                    Swal.fire('Berhasil!', res.message, 'success');
-                    $('#campaignKamTable').DataTable().ajax.reload(null, false);
-                }
-            ).fail(function () {
-                Swal.fire('Error!', 'Gagal activate campaign', 'error');
-            });
+            Swal.fire('Berhasil!', result.value.message, 'success');
+            $('#campaignKamTable').DataTable().ajax.reload(null, false);
         }
     });
 }

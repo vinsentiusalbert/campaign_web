@@ -14,6 +14,7 @@ class CampaignKam extends Model
         'sender_name',
         'channel',
         'campaign_unique_id',
+        'unique_id_report',
         'campaign_usecase',
         'message_body',
         'text_button',
@@ -63,7 +64,7 @@ class CampaignKam extends Model
 
     public function reports()
     {
-        return $this->hasMany(CampaignKamReport::class, 'campaign_kam_id');
+        return $this->hasMany(CampaignKamReport::class, 'unique_id', 'unique_id_report');
     }
 }
 
